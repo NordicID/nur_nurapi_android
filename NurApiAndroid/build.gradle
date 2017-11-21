@@ -1,0 +1,59 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 26
+    defaultConfig {
+        def nurapiVersionCode = 21
+        def nurapiVersion = "2.0.1"
+
+        minSdkVersion 21
+        targetSdkVersion 26
+        versionCode nurapiVersionCode
+        versionName nurapiVersion
+        buildConfigField "String", "NURVERSION", "\"$nurapiVersion\""
+        buildConfigField "int", "NURVERSIONCODE", "$nurapiVersionCode"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    buildToolsVersion '26.0.2'
+
+    /* Always remove NurApi.jar when doing clean build. Will downloaded in preBuild step */
+    /*clean << {
+        def f = new File('NurApiAndroid/libs/NurApi.jar')
+        if (f.exists()) {
+            println 'Deleted NurApi.jar'
+            f.delete();
+        }
+    }*/
+
+    /* Download NurApi.jar if missing */
+    preBuild << {
+        def f = new File('NurApiAndroid/libs/NurApi.jar')
+        if (!f.exists()) {
+            println 'Downloading latest NurApi.jar'
+            new URL('https://github.com/NordicID/nur_sdk/raw/master/java/NurApi.jar').withInputStream{ i -> f.withOutputStream{ it << i }}
+            println 'Done'
+        }
+    }
+
+    android.libraryVariants.all { variant ->
+        variant.outputs.all {
+            if ("${variant.name}" == "debug")
+                outputFileName = "NurApiAndroid_${variant.name}.aar"
+            else
+                outputFileName = "NurApiAndroid.aar"
+        }
+    }
+}
+
+dependencies {
+    compileOnly fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'com.android.support:appcompat-v7:26.1.0'
+    androidTestImplementation 'com.android.support.test:runner:1.0.1'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+    implementation 'no.nordicsemi.android.support.v18:scanner:1.0.0'
+}
