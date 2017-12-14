@@ -1,0 +1,9 @@
+v2.0.2
+- Added MDNS discovery
+
+v2.0.1
+- Cleanup
+
+v2.0.0
+- Separate NurApiAndroid from samples repo
+

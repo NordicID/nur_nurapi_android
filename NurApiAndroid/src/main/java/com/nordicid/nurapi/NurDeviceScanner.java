@@ -4,6 +4,8 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
+import android.net.nsd.NsdManager;
+import android.net.nsd.NsdServiceInfo;
 import android.os.Build;
 import android.os.Handler;
 import android.util.Log;
@@ -11,8 +13,10 @@ import android.widget.Toast;
 
 import com.nordicid.nurapi.BleScanner.BleScannerListener;
 
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static android.content.Context.LOCATION_SERVICE;
@@ -47,11 +51,11 @@ public class NurDeviceScanner implements BleScannerListener {
         void onScanFinished();
     }
 
-    public NurDeviceScanner(Context context,int requestedDevices, NurApi mApi){
+    public NurDeviceScanner(Context context, int requestedDevices, NurApi mApi){
         this(context,requestedDevices,null, mApi);
     }
 
-    public NurDeviceScanner(Context context,int requestedDevices, NurDeviceScannerListener listener, NurApi api){
+    public NurDeviceScanner(Context context, int requestedDevices, NurDeviceScannerListener listener, NurApi api){
         mDeviceList = new ArrayList<NurDeviceSpec>();
         mOwner = context;
         mRequestedDevices = requestedDevices;
@@ -99,6 +103,7 @@ public class NurDeviceScanner implements BleScannerListener {
 
         if (requestingETHDevice()) {
             Log.i(TAG,"Scanning Local Ethernet Devices");
+            queryMdnsDevices();
             queryEthernetDevices();
         }
 
@@ -127,6 +132,10 @@ public class NurDeviceScanner implements BleScannerListener {
         if (mScanning) {
             mScanning = false;
             BleScanner.getInstance().unregisterListener(this);
+            if (mNsdManager != null) {
+                mNsdManager.stopServiceDiscovery(mDiscoveryListener);
+                mNsdManager = null;
+            }
             if (mListener != null)
                 mListener.onScanFinished();
         }
@@ -225,6 +234,95 @@ public class NurDeviceScanner implements BleScannerListener {
         }
         mEthQueryRunning = false;
     }
+
+    final String SERVICE_TYPE = "_nur._tcp.";
+    NsdManager mNsdManager = null;
+
+    public void queryMdnsDevices()
+    {
+        try {
+            if (mNsdManager == null)
+                mNsdManager = (NsdManager) mOwner.getSystemService(Context.NSD_SERVICE);
+            mNsdManager.discoverServices(SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, mDiscoveryListener);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    // Instantiate a new DiscoveryListener
+    NsdManager.DiscoveryListener mDiscoveryListener = new NsdManager.DiscoveryListener() {
+
+        // Called as soon as service discovery begins.
+        @Override
+        public void onDiscoveryStarted(String regType) {
+            Log.d(TAG, "MDNS Service discovery started");
+        }
+
+        @Override
+        public void onServiceFound(NsdServiceInfo service) {
+            // A service was found! Do something with it.
+            Log.d(TAG, "MDNS Service discovery success" + service);
+            if (!service.getServiceType().equals(SERVICE_TYPE)) {
+                // Service type is the string containing the protocol and
+                // transport layer for this service.
+                Log.d(TAG, "MDNS Unknown Service Type: " + service.getServiceType());
+            }
+            else
+            {
+                mNsdManager.resolveService(service, mResolveListener);
+            }
+        }
+
+        @Override
+        public void onServiceLost(NsdServiceInfo service) {
+            // When the network service is no longer available.
+            Log.i(TAG, "MDNS Service lost" + service);
+        }
+
+        @Override
+        public void onDiscoveryStopped(String serviceType) {
+            Log.i(TAG, "MDNS Discovery stopped: " + serviceType);
+        }
+
+        @Override
+        public void onStartDiscoveryFailed(String serviceType, int errorCode) {
+            Log.e(TAG, "MDNS Discovery failed: Error code:" + errorCode);
+            mNsdManager.stopServiceDiscovery(this);
+        }
+
+        @Override
+        public void onStopDiscoveryFailed(String serviceType, int errorCode) {
+            Log.e(TAG, "MDNS Discovery failed: Error code:" + errorCode);
+            mNsdManager.stopServiceDiscovery(this);
+        }
+    };
+
+    NsdManager.ResolveListener mResolveListener = new NsdManager.ResolveListener() {
+        @Override
+        public void onResolveFailed(NsdServiceInfo serviceInfo, int errorCode) {
+            // Called when the resolve fails. Use the error code to debug.
+            Log.e(TAG, "MDNS Resolve failed" + errorCode);
+        }
+
+        @Override
+        public void onServiceResolved(NsdServiceInfo serviceInfo) {
+            Log.i(TAG, "MDNS Resolve Succeeded. " + serviceInfo);
+            Map<String, byte[]> map = serviceInfo.getAttributes();
+            String name = serviceInfo.getServiceName();
+            InetAddress host = serviceInfo.getHost();
+            int port = serviceInfo.getPort();
+            String type = "LAN";
+            if (map.containsKey("TYPE")) {
+                type = new String(map.get("TYPE")).toUpperCase();
+            }
+
+            if (host.getHostAddress().contains(":")) {
+                Log.e(TAG, "IPV6 not supported");
+            } else {
+                postNewDevice(new NurDeviceSpec("type=TCP;addr=" + host.getHostAddress() + ":" + port + ";port=" + port + ";name=" + name + ";transport=" + type));
+            }
+        }
+    };
 
     private void postNewDevice(final NurDeviceSpec device)
     {
