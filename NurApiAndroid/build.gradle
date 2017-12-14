@@ -3,8 +3,8 @@ apply plugin: 'com.android.library'
 android {
     compileSdkVersion 23
     defaultConfig {
-        def nurapiVersionCode = 21
-        def nurapiVersion = "2.0.1"
+        def nurapiVersionCode = 22
+        def nurapiVersion = "2.0.2"
 
         minSdkVersion 21
         targetSdkVersion 23
@@ -48,6 +48,20 @@ android {
                 outputFileName = "NurApiAndroid.aar"
         }
     }
+
+    android.libraryVariants.all { variant ->
+        variant.assemble.doLast {
+            if ("${variant.name}" == "release") {
+                copy {
+                    from('build/outputs/aar') {
+                        include 'NurApiAndroid.aar'
+                    }
+                    into '../prebuilt'
+                }
+            }
+        }
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_7
         targetCompatibility JavaVersion.VERSION_1_7
