@@ -47,7 +47,8 @@ public class NurAccessoryConfig
 	public static final int APP_FL_HID_BARCODE = (1<<0);
 	/** HID-bit for the RFID scan / inventory. */
 	public static final int APP_FL_HID_RFID = (1<<1);
-
+	/** Allow pairing bit */
+	public static final int APP_FL_USE_PEERMGR = (1<<5);
 	/** Device is configured as EXA51 reader. */
 	public static final int CONFIG_FLAG_EXA51 = (1<<0);
 	/** Device is configured as EXA31 reader. */
@@ -130,6 +131,27 @@ public class NurAccessoryConfig
 	 */
 	public boolean getHidRFID() {
 		return (flags & APP_FL_HID_RFID) != 0;
+	}
+
+	/**
+	 * Get state of 'Allow pairing' flag.
+	 * @return Returns true if pairing is allowed.
+	 */
+	public boolean getAllowPairingState()
+    {
+			return (flags & APP_FL_USE_PEERMGR) != 0;
+	}
+
+	/**
+	 * Set the 'Allow pairing' state.
+	 * @param setAllowPairing set to true if allowing device to pair with the target device".
+	 */
+	public void setAllowPairingState(boolean setAllowPairing)
+    {
+		if (setAllowPairing)
+			flags |= APP_FL_USE_PEERMGR;
+		else
+			flags &= ~APP_FL_USE_PEERMGR;
 	}
 
 	/**
