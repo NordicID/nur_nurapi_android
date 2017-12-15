@@ -269,14 +269,14 @@ public class NurDeviceScanner implements BleScannerListener {
             }
             else
             {
-                mNsdManager.resolveService(service, mResolveListener);
+                mNsdManager.resolveService(service, getResolveListener());
             }
         }
 
         @Override
         public void onServiceLost(NsdServiceInfo service) {
             // When the network service is no longer available.
-            Log.i(TAG, "MDNS Service lost" + service);
+            Log.i(TAG, "MDNS Service lost " + service);
         }
 
         @Override
@@ -297,32 +297,40 @@ public class NurDeviceScanner implements BleScannerListener {
         }
     };
 
-    NsdManager.ResolveListener mResolveListener = new NsdManager.ResolveListener() {
-        @Override
-        public void onResolveFailed(NsdServiceInfo serviceInfo, int errorCode) {
-            // Called when the resolve fails. Use the error code to debug.
-            Log.e(TAG, "MDNS Resolve failed" + errorCode);
-        }
-
-        @Override
-        public void onServiceResolved(NsdServiceInfo serviceInfo) {
-            Log.i(TAG, "MDNS Resolve Succeeded. " + serviceInfo);
-            Map<String, byte[]> map = serviceInfo.getAttributes();
-            String name = serviceInfo.getServiceName();
-            InetAddress host = serviceInfo.getHost();
-            int port = serviceInfo.getPort();
-            String type = "LAN";
-            if (map.containsKey("TYPE")) {
-                type = new String(map.get("TYPE")).toUpperCase();
+    NsdManager.ResolveListener getResolveListener() {
+        return new NsdManager.ResolveListener() {
+            @Override
+            public void onResolveFailed(NsdServiceInfo serviceInfo, int errorCode) {
+                if (errorCode == NsdManager.FAILURE_ALREADY_ACTIVE) {
+                    // This happens when multiple devices found in network and other resolving is already in progress.
+                    // Just keep trying..
+                    mNsdManager.resolveService(serviceInfo, getResolveListener());
+                    return;
+                }
+                // Called when the resolve fails. Use the error code to debug.
+                Log.e(TAG, "MDNS Resolve failed " + errorCode);
             }
 
-            if (host.getHostAddress().contains(":")) {
-                Log.e(TAG, "IPV6 not supported");
-            } else {
-                postNewDevice(new NurDeviceSpec("type=TCP;addr=" + host.getHostAddress() + ":" + port + ";port=" + port + ";name=" + name + ";transport=" + type));
+            @Override
+            public void onServiceResolved(NsdServiceInfo serviceInfo) {
+                Log.i(TAG, "MDNS Resolve Succeeded. " + serviceInfo);
+                Map<String, byte[]> map = serviceInfo.getAttributes();
+                String name = serviceInfo.getServiceName();
+                InetAddress host = serviceInfo.getHost();
+                int port = serviceInfo.getPort();
+                String type = "LAN";
+                if (map.containsKey("TYPE")) {
+                    type = new String(map.get("TYPE")).toUpperCase();
+                }
+
+                if (host.getHostAddress().contains(":")) {
+                    Log.e(TAG, "IPV6 not supported");
+                } else {
+                    postNewDevice(new NurDeviceSpec("type=TCP;addr=" + host.getHostAddress() + ":" + port + ";port=" + port + ";name=" + name + ";transport=" + type));
+                }
             }
-        }
-    };
+        };
+    }
 
     private void postNewDevice(final NurDeviceSpec device)
     {
