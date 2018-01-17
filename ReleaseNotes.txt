@@ -1,3 +1,6 @@
+v2.0.5
+- Added "Allow pairing" functionality
+
 v2.0.3
 - Fixed crash on MDNS discovery when other MDNS resolving already active, happens when many MDNS devices detected same time
 
