@@ -89,7 +89,8 @@ public class UartService extends Service implements BleScanner.BleScannerListene
     }
 
     public boolean isNearByConnect() {
-        return mAddress.equalsIgnoreCase("nearby");
+        //return mAddress.equalsIgnoreCase("nearby");
+        return mAddress.toLowerCase().startsWith("nearby");
     }
 
     public String getRealAddress()
@@ -264,7 +265,7 @@ public class UartService extends Service implements BleScanner.BleScannerListene
             super.onReadRemoteRssi(gatt, rssi, status);
             Log.d(TAG, "onReadRemoteRssi " + rssi + "; status " + status + "; isNearbyConnect " + isNearByConnect() + "; mConnectionState " + mConnectionState);
             if (isNearByConnect() && mConnectionState == STATE_CONNECTED) {
-                if (status == BluetoothGatt.GATT_SUCCESS) {
+                if (!mAddress.contains("nodisc") && status == BluetoothGatt.GATT_SUCCESS) {
                     if (rssi < -50) {
                         disconnect();
                     }
