@@ -157,7 +157,8 @@ public class BleScanner {
         }
 
         Log.i(TAG, "onDeviceFound() " + device.getAddress() + "; name " + name + "; rssi " + rssi);
-        for (BleScannerListener l : mListeners) {
+        List<BleScannerListener> listeners = new ArrayList<BleScannerListener>(mListeners);
+        for (BleScannerListener l : listeners) {
             l.onBleDeviceFound(device, name, rssi);
         }
     }
