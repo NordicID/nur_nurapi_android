@@ -1,6 +1,10 @@
 ## NurApiAndroid v2
 This repository contains NurApi for Android. 
 
+### Samples
+- [Sample repository](https://github.com/NordicID/nur_sample_android)
+- [Nordic ID RFID Demo repository](https://github.com/NordicID/nur_tools_rfiddemo_android)
+
 ## Creating a project
 - Create a project that fits your needs. 
 - Add NurApi.jar and NurApiAndroid.aar to your project as modules.
