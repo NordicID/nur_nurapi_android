@@ -56,7 +56,7 @@ public class NurAccessoryBattery {
 	 * 
 	 * @param source Reply bytes from the module.  
 	 * @return Returns the class filled with appropriate batteru related information.
-	 * @throws Exception
+	 * @throws Exception Can throw I/O, timeout or API related exception based on the occurred error.
 	 */
 	public static NurAccessoryBattery deserializeBatteryReply(byte []source) throws Exception
 	{

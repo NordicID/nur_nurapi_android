@@ -250,7 +250,7 @@ public class NurAccessoryExtension implements NurApiUnknownEventListener {
 	 * 
 	 * @throws Exception Can throw I/O, timeout or API related exception based on the occurred error.
 	 * 
-	 * @see {@link NurAccessoryBattery}
+	 * @see NurAccessoryBattery
 	 */
 	public NurAccessoryConfig getConfig() throws Exception
 	{
@@ -381,7 +381,7 @@ public class NurAccessoryExtension implements NurApiUnknownEventListener {
 	/**
 	 * Non-blocking beep call.
 	 *
-	 * @param timeout
+	 * @param timeout Beep duration in milliseconds
 	 *
 	 * @throws Exception Can throw I/O, timeout or API related exception based on the occurred error.
      */
@@ -437,6 +437,7 @@ public class NurAccessoryExtension implements NurApiUnknownEventListener {
 	 * @param cmd Configuration command as string. See Imager manual for details of commands
 	 * @param type Type of imager 0=Opticon
 	 * @throws Exception Can throw I/O, timeout or API related exception based on the occurred error.
+	 * @return Response from imager as byte array. See documentation of imager.
 	 */
 	public byte [] imagerCmd( String cmd, int type) throws Exception {
 		int x = 0;
@@ -828,6 +829,7 @@ public class NurAccessoryExtension implements NurApiUnknownEventListener {
 	 * Returns detailed connection info from accessory device.
 	 *
 	 * @throws Exception Can throw exception if an error occurred int APi's transport.
+	 * @return detailed connection info from accessory device as string.
 	 */
 	public String getConnectionInfo() throws Exception
 	{
