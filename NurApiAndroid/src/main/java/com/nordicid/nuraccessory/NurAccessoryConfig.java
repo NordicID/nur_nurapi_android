@@ -83,14 +83,14 @@ public class NurAccessoryConfig
 	private static void checkSignatureThrow(int signature, String message) throws NurApiException
 	{
 		if (signature != APP_PERM_SIG && signature != APP_PERM_SIG_OLD1)
-			throw new NurApiException(message, NurApiErrors.INVALID_PACKET);
+			throw new NurApiException(message + "; signature = " + signature, NurApiErrors.INVALID_PACKET);
 	}
 
 	// Check whether the given signature is correct as extracted from the byte data.
 	private static void checkSignatureThrow(byte []source, String message) throws NurApiException
 	{
 		if(source == null || source.length < 4)
-			throw new NurApiException(message, NurApiErrors.INVALID_PACKET);
+			throw new NurApiException(message + "; source invalid", NurApiErrors.INVALID_PACKET);
 		checkSignatureThrow(NurPacket.BytesToDword(source, 0), message);
 	}
 

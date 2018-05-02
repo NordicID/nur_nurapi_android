@@ -96,7 +96,7 @@ public class NurApiBLEAutoConnect implements UartServiceEvents, NurApiAutoConnec
 	 * @param api The NUR API instance that this instance should "notify" about the connection changes.
      */
 	public NurApiBLEAutoConnect(Context ctx, NurApi api)
-	{		
+	{
 		this.mContext = ctx;
 		this.mApi = api;
 	}
@@ -157,6 +157,43 @@ public class NurApiBLEAutoConnect implements UartServiceEvents, NurApiAutoConnec
 
 	final Handler mConnStateHandler = new Handler();
 
+	Runnable mConnectApiRunnable = new Runnable() {
+		@Override
+		public void run() {
+			Log.d(TAG, "ConnectApiRunnable; mService " + mService);
+
+			new Thread() {
+				@Override
+				public void run(){
+					try {
+						mApi.setTransport(null);
+
+						if (mService != null && mService.getConnState() == UartService.STATE_CONNECTED) {
+							Log.w(TAG, "connect");
+							mTr.setService(mService);
+							mApi.setTransport(mTr);
+							mApi.connect();
+							mState = STATE_CONNECTED;
+						} else {
+							forceDisconnect();
+						}
+
+					} catch (Exception e) {
+						e.printStackTrace();
+
+						if (!mApi.isConnected()) {
+							if (mServiceBound) {
+								Log.w(TAG, "reconnect on failure");
+								//mService.close();
+								mService.connect(mAddr);
+							}
+						}
+					}
+				}
+			}.start();
+		}
+	};
+
 	@Override
 	public void onConnStateChanged() 
 	{
@@ -165,38 +202,13 @@ public class NurApiBLEAutoConnect implements UartServiceEvents, NurApiAutoConnec
 			return;
 		}
 
-		Log.w(TAG, "onConnStateChanged " + mService.getConnState());
+		mConnStateHandler.removeCallbacksAndMessages(null);
+
+		Log.w(TAG, "onConnStateChanged " + mService.getConnState() + "; " + mService);
 		
 		if (mService.getConnState() == UartService.STATE_CONNECTED)
 		{
-            new Thread() {
-                @Override
-                public void run(){
-                    try {
-                        Thread.sleep(1000);
-                        mApi.setTransport(null);
-
-                        if (mService.getConnState() == UartService.STATE_CONNECTED) {
-                            Log.w(TAG, "connect");
-                            mTr.setService(mService);
-                            mApi.setTransport(mTr);
-                            mApi.connect();
-							mState = STATE_CONNECTED;
-                        }
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
-
-                        if (!mApi.isConnected()) {
-                            if (mServiceBound) {
-                                Log.w(TAG, "reconnect on failure");
-                                //mService.close();
-                                mService.connect(mAddr);
-                            }
-                        }
-                    }
-                }
-            }.start();
+			mConnStateHandler.postDelayed(mConnectApiRunnable, 1000);
 		}
 		else if (mService.getConnState() == UartService.STATE_DISCONNECTED)
 		{
@@ -230,6 +242,7 @@ public class NurApiBLEAutoConnect implements UartServiceEvents, NurApiAutoConnec
 	@Override
 	public void onDataAvailable(byte[] data)
 	{
+		//Log.d(TAG, "onDataAvailable " + data.length);
 		mTr.writeRxBuffer(data);
 	}
 
@@ -298,8 +311,11 @@ public class NurApiBLEAutoConnect implements UartServiceEvents, NurApiAutoConnec
 	 */
 	private void onStopInternal()
 	{
-		if (mApi.isConnected()) {
-			Log.d(TAG, "onStopInternal() disconnect");
+		mConnStateHandler.removeCallbacksAndMessages(null);
+
+		//if (mApi.isConnected())
+		{
+			Log.d(TAG, "onStopInternal() disconnect; " + mService);
 			try {
 				mApi.disconnect();				
 			} catch (Exception e) {
@@ -311,7 +327,6 @@ public class NurApiBLEAutoConnect implements UartServiceEvents, NurApiAutoConnec
 		try {
 			mApi.setTransport(null);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 

@@ -1,3 +1,6 @@
+v2.0.8
+- Fixed BLE bonded mode reconnect on some cases. Might get stuck in "connecting" state
+
 v2.0.7
 - Fix possible NPE when scanning for mdns devices
 

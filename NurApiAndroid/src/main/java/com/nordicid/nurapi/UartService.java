@@ -55,7 +55,7 @@ public class UartService extends Service implements BleScanner.BleScannerListene
     BluetoothGattCharacteristic mTxChar = null;
     BluetoothGattCharacteristic mRxChar = null;
     Context mContext;
-    Handler mHandler;
+    Handler mHandler = new Handler();
 
     String mAddress = "";
 
@@ -63,7 +63,6 @@ public class UartService extends Service implements BleScanner.BleScannerListene
     {
         mContext = ctx;
         mEvents = ev;
-        mHandler = new Handler();
     }
 
     public int getConnState()
@@ -256,8 +255,10 @@ public class UartService extends Service implements BleScanner.BleScannerListene
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt,
                                             BluetoothGattCharacteristic characteristic) {
-            if (mEvents != null && TX_CHAR_UUID.equals(characteristic.getUuid()))
+            if (mEvents != null && TX_CHAR_UUID.equals(characteristic.getUuid())) {
+                //Log.i(TAG, "onCharacteristicChanged TX_CHAR_UUID");
                 mEvents.onDataAvailable(characteristic.getValue());
+            }
         }
 
         @Override
@@ -441,12 +442,12 @@ public class UartService extends Service implements BleScanner.BleScannerListene
     Runnable mConnectBonded = new Runnable() {
         @Override
         public void run() {
-            Log.d(TAG, "ConnectBonded; mConnectionState " + mConnectionState);
+            //Log.d(TAG, "ConnectBonded; mConnectionState " + mConnectionState);
             if (mConnectionState == STATE_CONNECTED)
                 return;
             else if (mConnectionState == STATE_DISCONNECTED)
                 connectInternal(mAddress);
-            mHandler.postDelayed(mConnectBonded, 500);
+            mHandler.postDelayed(mConnectBonded, 1000);
         }
     };
 
@@ -492,6 +493,7 @@ public class UartService extends Service implements BleScanner.BleScannerListene
         Log.w(TAG, "close()");
         mClosed = true;
 
+        mHandler.removeCallbacksAndMessages(null);
         BleScanner.getInstance().unregisterListener(this);
 
         /*mHandler.post(new Runnable() {
