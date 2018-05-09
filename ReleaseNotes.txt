@@ -1,3 +1,7 @@
+v2.0.9
+- Fixed MDNS Network search
+- Fixed possible NPE on BLE transport
+
 v2.0.8
 - Fixed BLE bonded mode reconnect on some cases. Might get stuck in "connecting" state
 

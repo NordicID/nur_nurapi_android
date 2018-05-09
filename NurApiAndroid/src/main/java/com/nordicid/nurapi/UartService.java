@@ -493,7 +493,8 @@ public class UartService extends Service implements BleScanner.BleScannerListene
         Log.w(TAG, "close()");
         mClosed = true;
 
-        mHandler.removeCallbacksAndMessages(null);
+        if (mHandler != null)
+            mHandler.removeCallbacksAndMessages(null);
         BleScanner.getInstance().unregisterListener(this);
 
         /*mHandler.post(new Runnable() {

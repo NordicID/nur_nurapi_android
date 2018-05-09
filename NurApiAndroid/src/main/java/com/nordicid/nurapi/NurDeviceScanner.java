@@ -269,7 +269,7 @@ public class NurDeviceScanner implements BleScannerListener {
             }
             else
             {
-                if (mNsdManager != null) return;
+                if (mNsdManager == null) return;
                 mNsdManager.resolveService(service, getResolveListener());
             }
         }
@@ -288,14 +288,14 @@ public class NurDeviceScanner implements BleScannerListener {
         @Override
         public void onStartDiscoveryFailed(String serviceType, int errorCode) {
             Log.e(TAG, "MDNS Discovery failed: Error code:" + errorCode);
-            if (mNsdManager != null) return;
+            if (mNsdManager == null) return;
             mNsdManager.stopServiceDiscovery(this);
         }
 
         @Override
         public void onStopDiscoveryFailed(String serviceType, int errorCode) {
             Log.e(TAG, "MDNS Discovery failed: Error code:" + errorCode);
-            if (mNsdManager != null) return;
+            if (mNsdManager == null) return;
             mNsdManager.stopServiceDiscovery(this);
         }
     };
@@ -304,7 +304,7 @@ public class NurDeviceScanner implements BleScannerListener {
         return new NsdManager.ResolveListener() {
             @Override
             public void onResolveFailed(NsdServiceInfo serviceInfo, int errorCode) {
-                if (mNsdManager != null) return;
+                if (mNsdManager == null) return;
 
                 if (errorCode == NsdManager.FAILURE_ALREADY_ACTIVE) {
                     // This happens when multiple devices found in network and other resolving is already in progress.
@@ -318,7 +318,7 @@ public class NurDeviceScanner implements BleScannerListener {
 
             @Override
             public void onServiceResolved(NsdServiceInfo serviceInfo) {
-                if (mNsdManager != null) return;
+                if (mNsdManager == null) return;
 
                 Log.i(TAG, "MDNS Resolve Succeeded. " + serviceInfo);
                 Map<String, byte[]> map = serviceInfo.getAttributes();
