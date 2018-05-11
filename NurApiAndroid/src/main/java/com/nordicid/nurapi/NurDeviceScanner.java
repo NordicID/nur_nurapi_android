@@ -166,10 +166,8 @@ public class NurDeviceScanner implements BleScannerListener {
     }
 
     private boolean requestingIntDevice() {
-        if (Build.MANUFACTURER.toLowerCase().contains("nordicid"))
-            return true;
-
-        return false;
+        String manufacturer = Build.MANUFACTURER.toLowerCase();
+        return (manufacturer.contains("nordicid") || manufacturer.contains("nordic id"));
     }
 
     private void addDevice(NurDeviceSpec device) {
