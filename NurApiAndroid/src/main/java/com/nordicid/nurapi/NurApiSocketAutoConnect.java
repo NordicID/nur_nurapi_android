@@ -54,26 +54,19 @@ public class NurApiSocketAutoConnect implements NurApiAutoConnectTransport
 
 	private void disconnect() 
 	{
+		boolean joinAutoConnThread = false;
+
 		if (mAutoConnRunning) {
+			joinAutoConnThread = true;
 			mAutoConnRunning = false;
 			try {
 				mAutoConnThread.interrupt();
-				mAutoConnThread.join(10000);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			mAutoConnThread = null;
 		}
 
-		// Disconnect
-		try {
-			Log.d(TAG, "disconnect; iscon " + mApi.isConnected());
-			if (mApi.isConnected())
-				mApi.disconnect();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
+		// Disconnect transport
 		try {
 			Log.d(TAG, "disconnect " + mTr);
 			if (mTr != null) {
@@ -82,12 +75,20 @@ public class NurApiSocketAutoConnect implements NurApiAutoConnectTransport
 			}
 		} catch (Exception ex) { }
 
+		if (joinAutoConnThread) {
+			try {
+				mAutoConnThread.join(10000);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			mAutoConnThread = null;
+		}
+
 		try {
 			mApi.setTransport(null);
 		} catch (Exception ex) { }
 
 		mState = STATE_DISCONNECTED;
-		mAutoConnThread = null;
 	}
 	
 	@Override
@@ -192,7 +193,7 @@ public class NurApiSocketAutoConnect implements NurApiAutoConnectTransport
 				while (mAutoConnRunning)
 				{
 					if (mTr.isConnected()) {
-						Thread.sleep(2000);
+						Thread.sleep(1000);
 						continue;
 					}
 
@@ -204,7 +205,9 @@ public class NurApiSocketAutoConnect implements NurApiAutoConnectTransport
 						mState = STATE_CONNECTED;
 					} catch (Exception ex) {
 						Log.d(TAG, "FAILED");
-						Thread.sleep(2000);
+						mState = STATE_DISCONNECTED;
+						if (mAutoConnRunning)
+							Thread.sleep(1000);
 					}
 				}
 			} catch (InterruptedException e) {

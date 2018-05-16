@@ -36,6 +36,9 @@ public class BleScanner {
     public interface BleScannerListener {
         void onBleDeviceFound(final BluetoothDevice device, final String name, final int rssi);
     }
+    public interface BleScannerListenerEx {
+        void onBleDeviceFound(final ScanResult scanResult);
+    }
 
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothLeScannerCompat mScanner;
@@ -46,8 +49,13 @@ public class BleScanner {
     private Context mOwner = null;
 
     private List<BleScannerListener> mListeners = new ArrayList<BleScannerListener>();
+    private List<BleScannerListenerEx> mListenersEx = new ArrayList<BleScannerListenerEx>();
 
     private int mScanPeriod = 20000;
+
+    private int listenerCount() {
+        return (mListeners.size() + mListenersEx.size());
+    }
 
     private BleScanner(Context context) {
         mOwner = context;
@@ -83,6 +91,18 @@ public class BleScanner {
             mListeners.remove(listener);
     }
 
+    public void registerScanListenerEx(BleScannerListenerEx listener){
+        if (!mListenersEx.contains(listener))
+            mListenersEx.add(listener);
+
+        scanDevices();
+    }
+
+    public void unregisterListenerEx(BleScannerListenerEx listener) {
+        if (mListenersEx.contains(listener))
+            mListenersEx.remove(listener);
+    }
+
     private boolean isLocationServicesEnabled() {
         LocationManager lm = (LocationManager) mOwner.getSystemService(LOCATION_SERVICE);
         if (lm.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
@@ -116,7 +136,6 @@ public class BleScanner {
             }
         }, mScanPeriod);
 
-        //mBluetoothAdapter.startLeScan(mLeScanCallback);
         ScanSettings settings = new ScanSettings.Builder()
                     .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
                     .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
@@ -144,10 +163,15 @@ public class BleScanner {
         return true;
     }
 
-    private void onDeviceFound(final BluetoothDevice device, final String name, final int rssi) {
-        //Log.i(TAG, "onDeviceFound() " + device.getAddress() + "; name " + name + "; rssi " + rssi);
+    private void onDeviceFound(final ScanResult result) {
 
-        if (mListeners.size() == 0) {
+        BluetoothDevice device = result.getDevice();
+        String name = result.getScanRecord().getDeviceName();
+        int rssi = result.getRssi();
+
+        // Log.i(TAG, "onDeviceFound() " + device.getAddress() + "; name " + name + "; rssi " + rssi);
+
+        if (listenerCount() == 0) {
             //Log.i(TAG, "onDeviceFound() No listeners");
             return;
         }
@@ -157,9 +181,15 @@ public class BleScanner {
         }
 
         Log.i(TAG, "onDeviceFound() " + device.getAddress() + "; name " + name + "; rssi " + rssi);
+
         List<BleScannerListener> listeners = new ArrayList<BleScannerListener>(mListeners);
         for (BleScannerListener l : listeners) {
             l.onBleDeviceFound(device, name, rssi);
+        }
+
+        List<BleScannerListenerEx> listenersEx = new ArrayList<BleScannerListenerEx>(mListenersEx);
+        for (BleScannerListenerEx lex : listenersEx) {
+            lex.onBleDeviceFound(result);
         }
     }
 
@@ -169,10 +199,9 @@ public class BleScanner {
         if (mScanning) {
             mScanning = false;
             mScanner.stopScan(mScanCallback);
-            //mBluetoothAdapter.stopLeScan(mLeScanCallback);
         }
 
-        if (mListeners.size() > 0) {
+        if (listenerCount() > 0) {
             Log.i(TAG, "onScanFinished() restart scan");
             mHandler.postDelayed(new Runnable() {
                 @Override
@@ -247,50 +276,6 @@ public class BleScanner {
         onScanStarted();
     }
 
-    static String parseName(byte[] advData) {
-        int ptr = 0;
-
-        while (ptr < advData.length - 2) {
-            int length = advData[ptr++] & 0xff;
-            if (length == 0)
-                break;
-
-            final int ad_type = (advData[ptr++] & 0xff);
-
-            switch (ad_type) {
-                case 0xff:
-                    break;
-                case 0x08:
-                case 0x09:
-                    byte[] name = new byte[length - 1];
-                    int i = 0;
-                    length = length - 1;
-                    while (length > 0) {
-                        length--;
-                        name[i++] = advData[ptr++];
-                    }
-                    String nameString = new String(name);
-
-                    return nameString;
-            }
-            ptr += (length - 1);
-        }
-        return null;
-    }
-
-    /*private BluetoothAdapter.LeScanCallback mLeScanCallback =
-            new BluetoothAdapter.LeScanCallback() {
-                @Override
-                public void onLeScan(final BluetoothDevice device, final int rssi, byte[] scanRecord)
-                {
-                    if (!mScanning) {
-                        Log.e(TAG, "onLeScan() Got event while NOT scanning");
-                        return;
-                    }
-                    onDeviceFound(device, parseName(scanRecord), rssi);
-                }
-            };*/
-
     private ScanCallback mScanCallback = new ScanCallback() {
         @Override
         public void onScanResult(final int callbackType, final ScanResult result) {
@@ -298,7 +283,7 @@ public class BleScanner {
                 Log.d(TAG, "onScanResult() Got event while NOT scanning");
                 return;
             }
-            onDeviceFound(result.getDevice(), result.getScanRecord().getDeviceName(), result.getRssi());
+            onDeviceFound(result);
         }
 
         @Override
@@ -312,7 +297,7 @@ public class BleScanner {
             for (final ScanResult result : results)
             {
                 final BluetoothDevice device = result.getDevice();
-                onDeviceFound(device, result.getScanRecord().getDeviceName(), result.getRssi());
+                onDeviceFound(result);
                 if (!mScanning) {
                     break;
                 }

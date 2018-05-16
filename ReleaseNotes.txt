@@ -1,3 +1,8 @@
+v2.0.11
+- Added Nordic ID Smart Pair support
+- Added interface BleScannerListenerEx to BleScanner to get whole ScanResult
+- Faster socket transport disconnect during connecting to unreachable address
+
 v2.0.10
 - Fixed integrated device manufacturer name
 

@@ -369,7 +369,7 @@ public class NurAccessoryExtension implements NurApiUnknownEventListener {
 	/**
 	 * Sets the LED operation mode.
 	 *
-	 * @param mode Mode to set.
+	 * @param mode Mode to set. 0=off, 1=on, 2=blink
 	 *
 	 * @throws Exception Can throw I/O, timeout or API related exception based on the occurred error.
      */

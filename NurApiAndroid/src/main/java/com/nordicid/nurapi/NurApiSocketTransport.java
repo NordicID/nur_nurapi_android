@@ -6,7 +6,9 @@ import com.nordicid.nurapi.NurApiTransport;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketAddress;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
@@ -66,7 +68,9 @@ public class NurApiSocketTransport implements NurApiTransport
 					host = "localhost";
 					port = 6734;
 				}
-				mSocket = new Socket(host, port);
+				mSocket = new Socket();
+				mSocket.connect(new InetSocketAddress(host, port));
+
 				//mSocket.setSoTimeout(1000);
 				//mSocket.setKeepAlive(true);// NEW
 				//mSocket.setTcpNoDelay(false);// NEW (Nagle)
@@ -101,10 +105,7 @@ public class NurApiSocketTransport implements NurApiTransport
 	{
 		Log.d(TAG, "disconnect() mConnected " + mConnected);
 
-		if(!mConnected)
-			return;
-		
-        try{            
+        try{
         	if(mInput != null) 
         	{
         		mInput.close();

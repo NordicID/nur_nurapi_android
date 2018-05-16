@@ -2,14 +2,11 @@ package com.nordicid.nurapi;
 
 import android.bluetooth.BluetoothDevice;
 import android.content.Context;
-import android.content.pm.PackageManager;
-import android.location.LocationManager;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
 import android.os.Build;
 import android.os.Handler;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.nordicid.nurapi.BleScanner.BleScannerListener;
 
@@ -18,8 +15,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import static android.content.Context.LOCATION_SERVICE;
 
 public class NurDeviceScanner implements BleScannerListener {
 
@@ -383,14 +378,14 @@ public class NurDeviceScanner implements BleScannerListener {
         }
     }
 
-    public NurDeviceSpec getNearbyBleDeviceSpec() {
-        return new NurDeviceSpec("type=BLE;addr=nearby;name=Nearby Bluetooth");
+    public NurDeviceSpec getSmartPairBleDeviceSpec() {
+        return new NurDeviceSpec("type=BLE;addr=smartpair;name=Nordic ID Smart Pair");
     }
 
     public void queryBLEDevices()
     {
-        // Add nearby
-        addDevice(getNearbyBleDeviceSpec());
+        // Add smart pair
+        addDevice(getSmartPairBleDeviceSpec());
 
         // Add paired
         Set<BluetoothDevice> pairedDevices = BleScanner.getInstance().getPairedDevices();

@@ -21,10 +21,12 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 
+import no.nordicsemi.android.support.v18.scanner.ScanResult;
+
 /**
  * Provide "UART service" to the autoconnect.
  */
-public class UartService extends Service implements BleScanner.BleScannerListener
+public class UartService extends Service implements BleScanner.BleScannerListenerEx
 {
     private final static String TAG = UartService.class.getSimpleName();
 
@@ -87,9 +89,8 @@ public class UartService extends Service implements BleScanner.BleScannerListene
         }
     }
 
-    public boolean isNearByConnect() {
-        //return mAddress.equalsIgnoreCase("nearby");
-        return mAddress.toLowerCase().startsWith("nearby");
+    public boolean isSmartPairConnect() {
+        return NurApiBLEAutoConnect.isSmartPairAddress(mAddress);
     }
 
     public String getRealAddress()
@@ -190,8 +191,8 @@ public class UartService extends Service implements BleScanner.BleScannerListene
                     Log.i(TAG, "CONNECTED");
                     setConnState(STATE_CONNECTED);
 
-                    if (isNearByConnect()) {
-                        mHandler.postDelayed(mCheckNearbyRssi, 5000);
+                    if (isSmartPairConnect()) {
+                        mHandler.postDelayed(mCheckSmartPairRssi, mCheckSmartPairRssiInterval);
                     }
 
                 } else {
@@ -264,24 +265,33 @@ public class UartService extends Service implements BleScanner.BleScannerListene
         @Override
         public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
             super.onReadRemoteRssi(gatt, rssi, status);
-            Log.d(TAG, "onReadRemoteRssi " + rssi + "; status " + status + "; isNearbyConnect " + isNearByConnect() + "; mConnectionState " + mConnectionState);
-            if (isNearByConnect() && mConnectionState == STATE_CONNECTED) {
-                if (!mAddress.contains("nodisc") && status == BluetoothGatt.GATT_SUCCESS) {
+            Log.d(TAG, "onReadRemoteRssi " + rssi + "; status " + status + "; isSmartPairConnect " + isSmartPairConnect() + "; mConnectionState " + mConnectionState);
+            if (isSmartPairConnect() && mConnectionState == STATE_CONNECTED)
+            {
+                // Automatic smart pair disconnect:
+                // - EXA51 (& others) disconnect when rssi is worse than -50
+                // - If address contains "nodisc" (e.g. watch app), never auto disconnect
+                // - If device is EXA31, never auto disconnect
+                if (mSmartPairDevType != 0x31 && !mAddress.contains("nodisc") && status == BluetoothGatt.GATT_SUCCESS) {
                     if (rssi < -50) {
                         disconnect();
                     }
                 }
 
                 if (mConnectionState == STATE_CONNECTED) {
-                    mHandler.postDelayed(mCheckNearbyRssi, 5000);
+                    mHandler.postDelayed(mCheckSmartPairRssi, mCheckSmartPairRssiInterval);
                 }
             }
         }
     };
 
     @Override
-    public void onBleDeviceFound(BluetoothDevice device, String name, int rssi) {
-        Log.d(TAG, "onBleDeviceFound() " + device.getAddress());
+    public void onBleDeviceFound(final ScanResult scanResult) {
+        BluetoothDevice device = scanResult.getDevice();
+        String name = scanResult.getScanRecord().getDeviceName();
+        int rssi = scanResult.getRssi();
+
+        // Log.d(TAG, "onBleDeviceFound() " + device.getAddress());
 
         if (mClosed)
             return;
@@ -289,17 +299,33 @@ public class UartService extends Service implements BleScanner.BleScannerListene
         if (device.getAddress().equalsIgnoreCase(mAddress)) {
             Log.d(TAG, "onDeviceFound() ADDR MATCH; mConnectionState " + mConnectionState);
             this.connectInternal(device.getAddress());
-            BleScanner.getInstance().unregisterListener(this);
+            BleScanner.getInstance().unregisterListenerEx(this);
         }
-        else if (isNearByConnect())
+        else if (isSmartPairConnect())
         {
-            if (rssi >= -40) {
-                Log.d(TAG, "onDeviceFound() RSSI OK; mConnectionState " + mConnectionState);
+            mSmartPairDevType = 0; // 0 = Unknown dev type; 0x51 = EXA51; 0x31 = EXA31
+
+            // Starting from EXA FW 2.2.5 manufacturer data contains device type info
+            try {
+                byte[] manfData = scanResult.getScanRecord().getManufacturerSpecificData(0x04e6);
+                mSmartPairDevType = (manfData[0] & 0xFF);
+            } catch (Exception e) { }
+
+            int rssiConnLimit = -40; // Default (EXA51 & others)
+            if (mSmartPairDevType == 0x31) {
+                // lower rssi (-50) limit for EXA31
+                rssiConnLimit = -50;
+            }
+
+            if (rssi >= rssiConnLimit) {
+                Log.d(TAG, "onDeviceFound() RSSI OK; " + rssi + " >= " + rssiConnLimit + "; smartPairDevType " + String.format("0x%X", mSmartPairDevType));
                 this.connectInternal(device.getAddress());
-                BleScanner.getInstance().unregisterListener(this);
+                BleScanner.getInstance().unregisterListenerEx(this);
             }
         }
     }
+
+    int mSmartPairDevType = 0;
 
     public class LocalBinder extends Binder {
         UartService getService() {
@@ -376,18 +402,26 @@ public class UartService extends Service implements BleScanner.BleScannerListene
 
         setConnState(STATE_DISCONNECTED);
 
-        if (!isNearByConnect()) {
-            BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
-            if (device != null && device.getBondState() != BluetoothDevice.BOND_NONE) {
-                // Device is bonded (or bonding) so we cannot use BLE scanner..
-                // Just try direct connect
-                Log.d(TAG, "started bonded device connect");
-                mHandler.postDelayed(mConnectBonded, 100);
-                return true;
+        if (!isSmartPairConnect()) {
+            try {
+                BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
+                if (device != null && device.getBondState() != BluetoothDevice.BOND_NONE) {
+                    // Device is bonded (or bonding) so we cannot use BLE scanner..
+                    // Just try direct connect
+                    Log.d(TAG, "started bonded device connect");
+                    mHandler.postDelayed(mConnectBonded, 100);
+                    return true;
+                }
+            }
+            catch (Exception e)
+            {
+                e.printStackTrace();
+                disconnect();
+                return false;
             }
         }
 
-        BleScanner.getInstance().registerScanListener(this);
+        BleScanner.getInstance().registerScanListenerEx(this);
         Log.d(TAG, "started device scan");
         return true;
     }
@@ -451,15 +485,17 @@ public class UartService extends Service implements BleScanner.BleScannerListene
         }
     };
 
-    Runnable mCheckNearbyRssi = new Runnable() {
+    int mCheckSmartPairRssiInterval = 3000;
+
+    Runnable mCheckSmartPairRssi = new Runnable() {
         @Override
         public void run() {
-            Log.d(TAG, "CheckNearbyRssi; mConnectionState " + mConnectionState);
+            Log.d(TAG, "CheckSmartPairRssi; mConnectionState " + mConnectionState);
             if (mConnectionState != STATE_CONNECTED || mBluetoothGatt == null)
                 return;
             if (!mBluetoothGatt.readRemoteRssi()) {
                 Log.e(TAG, "readRemoteRssi() failed");
-                mHandler.postDelayed(mCheckNearbyRssi, 5000);
+                mHandler.postDelayed(mCheckSmartPairRssi, mCheckSmartPairRssiInterval);
             }
         }
     };
@@ -495,7 +531,7 @@ public class UartService extends Service implements BleScanner.BleScannerListene
 
         if (mHandler != null)
             mHandler.removeCallbacksAndMessages(null);
-        BleScanner.getInstance().unregisterListener(this);
+        BleScanner.getInstance().unregisterListenerEx(this);
 
         /*mHandler.post(new Runnable() {
             @Override
@@ -558,7 +594,11 @@ public class UartService extends Service implements BleScanner.BleScannerListene
 
         mRxChar.setValue(value);
         mTxActive = true;
-        boolean status = mBluetoothGatt.writeCharacteristic(mRxChar);
+        boolean status = false;
+        try {
+            status = mBluetoothGatt.writeCharacteristic(mRxChar);
+        } catch (Exception e) { }
+
         if (!status)
             mTxActive = false;
 

@@ -394,9 +394,19 @@ public class NurApiBLEAutoConnect implements UartServiceEvents, NurApiAutoConnec
 			}
 		}
 
-		if (mAddr.equalsIgnoreCase("nearby"))
-			return "Searching nearby bluetooth device";
+		if (isSmartPairAddress(mAddr))
+			return "Smart pair bluetooth device";
 
 		return "Searching bluetooth device " + mAddr;
+	}
+
+	static public boolean isSmartPairAddress(String addr)
+	{
+		String lowerCaseAddr = addr.toLowerCase();
+
+		if (lowerCaseAddr.startsWith("smartpair") || lowerCaseAddr.startsWith("nearby")) // "nearby" for backward compat
+			return true;
+
+		return false;
 	}
 }
