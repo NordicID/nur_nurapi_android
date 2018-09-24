@@ -11,9 +11,12 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Handler;
+import android.provider.Settings;
+import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -103,14 +106,17 @@ public class BleScanner {
             mListenersEx.remove(listener);
     }
 
-    private boolean isLocationServicesEnabled() {
-        LocationManager lm = (LocationManager) mOwner.getSystemService(LOCATION_SERVICE);
-        if (lm.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
-                lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER))
-        {
-            return true;
+    boolean isLocationServicesEnabled() {
+        int locationMode = Settings.Secure.LOCATION_MODE_OFF;
+
+        try {
+            locationMode = Settings.Secure.getInt(mOwner.getContentResolver(), Settings.Secure.LOCATION_MODE);
+            Log.d(TAG, "locationMode = " + locationMode);
+        } catch (Settings.SettingNotFoundException e) {
+            e.printStackTrace();
         }
-        return false;
+
+        return (locationMode != Settings.Secure.LOCATION_MODE_OFF);
     }
 
     private void onScanStarted() {
@@ -180,7 +186,7 @@ public class BleScanner {
             return;
         }
 
-        Log.i(TAG, "onDeviceFound() " + device.getAddress() + "; name " + name + "; rssi " + rssi);
+        // Log.i(TAG, "onDeviceFound() " + device.getAddress() + "; name " + name + "; rssi " + rssi);
 
         List<BleScannerListener> listeners = new ArrayList<BleScannerListener>(mListeners);
         for (BleScannerListener l : listeners) {
@@ -262,12 +268,15 @@ public class BleScanner {
             return;
         }
 
-        // Location ON is required for android M or newer
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !isLocationServicesEnabled())
-        {
-            Log.w(TAG, "Location not ON; BT search not available");
-            showToast(R.string.text_location_not_on);
-            // return; // Do not return, it might still work.. some xiaomi miui8 phones for example
+        Configuration config = mOwner.getResources().getConfiguration();
+        boolean isWatch = (config.uiMode & Configuration.UI_MODE_TYPE_MASK) == Configuration.UI_MODE_TYPE_WATCH;
+        if (!isWatch) {
+            // Location ON is required for android M or newer (location not required for watch..
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !isLocationServicesEnabled()) {
+                Log.w(TAG, "Location not ON; BT search not available");
+                showToast(R.string.text_location_not_on);
+                // return; // Do not return, it might still work.. some xiaomi miui8 phones for example
+            }
         }
 
         if (mScanner == null)

@@ -16,6 +16,7 @@
 */
 package com.nordicid.nurapi;
 
+import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -41,6 +42,8 @@ public class NurApiUsbAutoConnect implements NurApiAutoConnectTransport
 	private boolean mRequestingPermission = false;
 
 	private String mReceiverRegisteredAction = "";
+
+	private boolean mEnabled = false;
 
 	void registerReceiver(String action)
 	{
@@ -180,7 +183,12 @@ public class NurApiUsbAutoConnect implements NurApiAutoConnectTransport
 	@Override
 	public void setAddress(String addr)
 	{
+		if (addr == null)
+			addr = "";
+
 		Log.d(TAG, "setAddress " + addr);
+
+		mEnabled = addr.length() > 0;
 
 		this.mUsbDevice = null;
 		for (UsbDevice device : mUsbManager.getDeviceList().values()) {
@@ -197,7 +205,12 @@ public class NurApiUsbAutoConnect implements NurApiAutoConnectTransport
 		}
 
 		if (mUsbDevice != null) {
-			connect();
+			new Handler().postDelayed(new Runnable() {
+				@Override
+				public void run() {
+					connect();
+				}
+			}, 200);
 		}
 	}
 
@@ -228,12 +241,15 @@ public class NurApiUsbAutoConnect implements NurApiAutoConnectTransport
 	}
 
 	@Override
-	public String getAddress() { return ""; }
+	public String getAddress() { return mEnabled ? "USB" : ""; }
 
 	@Override
 	public String getDetails() {
 		if (mApi.isConnected())
 			return "Connected to USB";
+		else if (!mEnabled)
+			return "Disabled";
+
 		return "Disconnected from USB";
 	}
 }

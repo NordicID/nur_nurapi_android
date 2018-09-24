@@ -35,7 +35,6 @@ import android.util.Log;
  */
 public class NurApiBLEAutoConnect implements UartServiceEvents, NurApiAutoConnectTransport
 {
-	// Dbg.
 	public static final String TAG = "NurApiBLEAutoConnect";
 
 	// The API instance given to this autoconnection instance.
@@ -50,6 +49,8 @@ public class NurApiBLEAutoConnect implements UartServiceEvents, NurApiAutoConnec
 	private String mAddr = "";
 	
 	boolean mServiceBound = false;
+
+	private int mLastRemoteRssi = 0;
 
 	// The physical transport used here.
 	private NurApiBLETransport mTr = new NurApiBLETransport();
@@ -100,6 +101,10 @@ public class NurApiBLEAutoConnect implements UartServiceEvents, NurApiAutoConnec
 		this.mContext = ctx;
 		this.mApi = api;
 	}
+
+	public int getLastRemoteRssi(){
+	    return mLastRemoteRssi;
+    }
 
 	/**
 	 * Set address of the accessory / reader. This is the "connect" as well as the "disconnect" (when address is empty) method.
@@ -197,6 +202,8 @@ public class NurApiBLEAutoConnect implements UartServiceEvents, NurApiAutoConnec
 	@Override
 	public void onConnStateChanged() 
 	{
+        mLastRemoteRssi = 0;
+
 		if (mService == null) {
 			forceDisconnect();
 			return;
@@ -246,7 +253,12 @@ public class NurApiBLEAutoConnect implements UartServiceEvents, NurApiAutoConnec
 		mTr.writeRxBuffer(data);
 	}
 
-	/**
+    @Override
+    public void onReadRemoteRssi(int rssi) {
+        mLastRemoteRssi = rssi;
+    }
+
+    /**
 	 * On pause: NOP.
 	 */
 	@Override
@@ -394,19 +406,6 @@ public class NurApiBLEAutoConnect implements UartServiceEvents, NurApiAutoConnec
 			}
 		}
 
-		if (isSmartPairAddress(mAddr))
-			return "Smart pair bluetooth device";
-
 		return "Searching bluetooth device " + mAddr;
-	}
-
-	static public boolean isSmartPairAddress(String addr)
-	{
-		String lowerCaseAddr = addr.toLowerCase();
-
-		if (lowerCaseAddr.startsWith("smartpair") || lowerCaseAddr.startsWith("nearby")) // "nearby" for backward compat
-			return true;
-
-		return false;
 	}
 }

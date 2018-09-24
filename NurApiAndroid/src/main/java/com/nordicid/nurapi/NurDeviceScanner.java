@@ -379,13 +379,15 @@ public class NurDeviceScanner implements BleScannerListener {
     }
 
     public NurDeviceSpec getSmartPairBleDeviceSpec() {
-        return new NurDeviceSpec("type=BLE;addr=smartpair;name=Nordic ID Smart Pair");
+        return new NurDeviceSpec("type=SmartPair;addr=smartpair;name=Nordic ID Smart Pair");
     }
 
     public void queryBLEDevices()
     {
-        // Add smart pair
-        addDevice(getSmartPairBleDeviceSpec());
+        if (NurSmartPairSupport.isSupported()) {
+            // Add smart pair
+            addDevice(getSmartPairBleDeviceSpec());
+        }
 
         // Add paired
         Set<BluetoothDevice> pairedDevices = BleScanner.getInstance().getPairedDevices();

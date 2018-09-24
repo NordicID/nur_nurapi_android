@@ -347,20 +347,20 @@ public class NurAccessoryExtension implements NurApiUnknownEventListener {
 	}
 
 	/**
-	 * Get  whether the accessory extension is supported or not.
+	 * Get whether the accessory extension is supported or not.
 	 *
-	 * @return Returns true if accessory extension is supported. Internally the supported is detected by getting the battery voltage.
+	 * @return Returns true if accessory extension is supported.
      */
 	public boolean isSupported()
 	{
 		String strVersion;
 		try {
 			strVersion = getFwVersion().getFullApplicationVersion();
-			Log.d(TAG, "isSupported: version = \"" + strVersion + "\".");
+			// Log.d(TAG, "isSupported: version = \"" + strVersion + "\".");
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
+			// e.printStackTrace();
 			return false;
 		}
 		return true;

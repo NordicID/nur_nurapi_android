@@ -5,5 +5,6 @@ package com.nordicid.nurapi;
  */
 public interface UartServiceEvents {
 	public void onConnStateChanged();
-	public void onDataAvailable(byte []data);	
+	public void onDataAvailable(byte []data);
+	public void onReadRemoteRssi(int rssi);
 }

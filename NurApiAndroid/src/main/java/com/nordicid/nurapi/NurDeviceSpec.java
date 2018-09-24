@@ -21,7 +21,6 @@ import android.content.Context;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * Created by Nordic ID on 18.7.2016.
@@ -187,7 +186,7 @@ public class NurDeviceSpec {
 
     public static NurApiAutoConnectTransport createAutoConnectTransport(Context ctx, NurApi api, NurDeviceSpec spec) throws NurApiException
     {
-        switch (spec.getType())
+        switch (spec.getType().toUpperCase())
         {
             case "BLE":
                 return new NurApiBLEAutoConnect(ctx, api);
@@ -197,6 +196,10 @@ public class NurDeviceSpec {
                 return new NurApiSocketAutoConnect(ctx, api);
             case "INT":
                 return new NurApiSocketAutoConnect(ctx, api);
+            case "SMARTPAIR":
+                if (NurSmartPairSupport.isSupported())
+                    return NurSmartPairSupport.createSmartPairTransport(ctx, api);
+                break;
         }
 
         throw new NurApiException("NurDeviceSpec::createAutoConnectTransport() : can't determine type of transport: " + spec.getType());

@@ -89,10 +89,6 @@ public class UartService extends Service implements BleScanner.BleScannerListene
         }
     }
 
-    public boolean isSmartPairConnect() {
-        return NurApiBLEAutoConnect.isSmartPairAddress(mAddress);
-    }
-
     public String getRealAddress()
     {
         if (mBluetoothGatt == null) {
@@ -191,9 +187,7 @@ public class UartService extends Service implements BleScanner.BleScannerListene
                     Log.i(TAG, "CONNECTED");
                     setConnState(STATE_CONNECTED);
 
-                    if (isSmartPairConnect()) {
-                        mHandler.postDelayed(mCheckSmartPairRssi, mCheckSmartPairRssiInterval);
-                    }
+                    mHandler.postDelayed(mCheckRemoteRssi, mCheckRemoteRssiInterval);
 
                 } else {
                     disconnect();
@@ -264,22 +258,16 @@ public class UartService extends Service implements BleScanner.BleScannerListene
 
         @Override
         public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
+            // Log.d(TAG, "onReadRemoteRssi " + rssi + "; status " + status + "; mConnectionState " + mConnectionState);
+
             super.onReadRemoteRssi(gatt, rssi, status);
-            Log.d(TAG, "onReadRemoteRssi " + rssi + "; status " + status + "; isSmartPairConnect " + isSmartPairConnect() + "; mConnectionState " + mConnectionState);
-            if (isSmartPairConnect() && mConnectionState == STATE_CONNECTED)
+
+            if (mConnectionState == STATE_CONNECTED)
             {
-                // Automatic smart pair disconnect:
-                // - EXA51 (& others) disconnect when rssi is worse than -50
-                // - If address contains "nodisc" (e.g. watch app), never auto disconnect
-                // - If device is EXA31, never auto disconnect
-                if (mSmartPairDevType != 0x31 && !mAddress.contains("nodisc") && status == BluetoothGatt.GATT_SUCCESS) {
-                    if (rssi < -50) {
-                        disconnect();
-                    }
-                }
+                mEvents.onReadRemoteRssi(rssi);
 
                 if (mConnectionState == STATE_CONNECTED) {
-                    mHandler.postDelayed(mCheckSmartPairRssi, mCheckSmartPairRssiInterval);
+                    mHandler.postDelayed(mCheckRemoteRssi, mCheckRemoteRssiInterval);
                 }
             }
         }
@@ -301,31 +289,7 @@ public class UartService extends Service implements BleScanner.BleScannerListene
             this.connectInternal(device.getAddress());
             BleScanner.getInstance().unregisterListenerEx(this);
         }
-        else if (isSmartPairConnect())
-        {
-            mSmartPairDevType = 0; // 0 = Unknown dev type; 0x51 = EXA51; 0x31 = EXA31
-
-            // Starting from EXA FW 2.2.5 manufacturer data contains device type info
-            try {
-                byte[] manfData = scanResult.getScanRecord().getManufacturerSpecificData(0x04e6);
-                mSmartPairDevType = (manfData[0] & 0xFF);
-            } catch (Exception e) { }
-
-            int rssiConnLimit = -40; // Default (EXA51 & others)
-            if (mSmartPairDevType == 0x31) {
-                // lower rssi (-50) limit for EXA31
-                rssiConnLimit = -50;
-            }
-
-            if (rssi >= rssiConnLimit) {
-                Log.d(TAG, "onDeviceFound() RSSI OK; " + rssi + " >= " + rssiConnLimit + "; smartPairDevType " + String.format("0x%X", mSmartPairDevType));
-                this.connectInternal(device.getAddress());
-                BleScanner.getInstance().unregisterListenerEx(this);
-            }
-        }
     }
-
-    int mSmartPairDevType = 0;
 
     public class LocalBinder extends Binder {
         UartService getService() {
@@ -402,23 +366,21 @@ public class UartService extends Service implements BleScanner.BleScannerListene
 
         setConnState(STATE_DISCONNECTED);
 
-        if (!isSmartPairConnect()) {
-            try {
-                BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
-                if (device != null && device.getBondState() != BluetoothDevice.BOND_NONE) {
-                    // Device is bonded (or bonding) so we cannot use BLE scanner..
-                    // Just try direct connect
-                    Log.d(TAG, "started bonded device connect");
-                    mHandler.postDelayed(mConnectBonded, 100);
-                    return true;
-                }
+        try {
+            BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(address);
+            if (device != null && device.getBondState() != BluetoothDevice.BOND_NONE) {
+                // Device is bonded (or bonding) so we cannot use BLE scanner..
+                // Just try direct connect
+                Log.d(TAG, "started bonded device connect");
+                mHandler.postDelayed(mConnectBonded, 100);
+                return true;
             }
-            catch (Exception e)
-            {
-                e.printStackTrace();
-                disconnect();
-                return false;
-            }
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            disconnect();
+            return false;
         }
 
         BleScanner.getInstance().registerScanListenerEx(this);
@@ -485,17 +447,17 @@ public class UartService extends Service implements BleScanner.BleScannerListene
         }
     };
 
-    int mCheckSmartPairRssiInterval = 3000;
+    int mCheckRemoteRssiInterval = 3000;
 
-    Runnable mCheckSmartPairRssi = new Runnable() {
+    Runnable mCheckRemoteRssi = new Runnable() {
         @Override
         public void run() {
-            Log.d(TAG, "CheckSmartPairRssi; mConnectionState " + mConnectionState);
+            // Log.d(TAG, "CheckRemoteRssi; mConnectionState " + mConnectionState);
             if (mConnectionState != STATE_CONNECTED || mBluetoothGatt == null)
                 return;
             if (!mBluetoothGatt.readRemoteRssi()) {
                 Log.e(TAG, "readRemoteRssi() failed");
-                mHandler.postDelayed(mCheckSmartPairRssi, mCheckSmartPairRssiInterval);
+                mHandler.postDelayed(mCheckRemoteRssi, mCheckRemoteRssiInterval);
             }
         }
     };
