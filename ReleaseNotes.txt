@@ -1,3 +1,6 @@
+v2.0.13
+- Update BLE transports for SmartPair library
+
 v2.0.11
 - Added Nordic ID Smart Pair support
 - Added interface BleScannerListenerEx to BleScanner to get whole ScanResult
