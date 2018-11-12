@@ -98,7 +98,7 @@ public class NurDeviceScanner implements BleScannerListener {
 
         if (requestingETHDevice()) {
             Log.i(TAG,"Scanning Local Ethernet Devices");
-            queryMdnsDevices();
+            //queryMdnsDevices();
             queryEthernetDevices();
         }
 

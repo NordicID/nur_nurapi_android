@@ -21,7 +21,8 @@ import android.content.Context;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-
+import java.util.Map;
+import java.util.Map.Entry;
 /**
  * Created by Nordic ID on 18.7.2016.
  */
@@ -29,7 +30,8 @@ public class NurDeviceSpec {
 
     private String mSpecStr = "";
     private boolean mNeedRegen = false;
-    private LinkedHashMap<String, String> mParams = new LinkedHashMap<String,String>();
+    private Map<String,String> mParams = new LinkedHashMap<String,String>();
+    //private LinkedHashMap<String, String> mParams = new LinkedHashMap<String,String>();
 
     public void parse(String specStr)
     {
@@ -95,10 +97,12 @@ public class NurDeviceSpec {
     private void regenerateSpec()
     {
         String ret = "";
-        Iterator<LinkedHashMap.Entry<String,String>> itr = mParams.entrySet().iterator();
+        Iterator<Map.Entry<String,String>> itr = mParams.entrySet().iterator();
+        //Iterator<LinkedHashMap.Entry<String,String>> itr = mParams.entrySet().iterator();
         while (itr.hasNext())
         {
-            LinkedHashMap.Entry<String,String> entry = itr.next();
+            //LinkedHashMap.Entry<String,String> entry = itr.next();
+            Map.Entry<String,String> entry = itr.next();
             if (ret.length() > 0)
                 ret += ";";
             ret += entry.getKey();

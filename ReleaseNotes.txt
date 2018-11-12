@@ -1,3 +1,7 @@
+v2.0.14
+- Device scan: Removed mDNS scan as NurApi (ver 1.8.1.38) queryEthernet() support it now.
+- Fixed LinkedHashMap.Entry error (caused by JavaVersion.VERSION_1_8)
+
 v2.0.13
 - Update BLE transports for SmartPair library
 
