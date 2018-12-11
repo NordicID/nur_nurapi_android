@@ -98,7 +98,7 @@ public class NurDeviceScanner implements BleScannerListener {
 
         if (requestingETHDevice()) {
             Log.i(TAG,"Scanning Local Ethernet Devices");
-            //queryMdnsDevices();
+            queryMdnsDevices();
             queryEthernetDevices();
         }
 
@@ -216,8 +216,10 @@ public class NurDeviceScanner implements BleScannerListener {
             while (mScanning) {
                 theDevices = mApi.queryEthDevices();
                 for (NurEthConfig cfg : theDevices) {
-                    if (cfg.hostMode == 0) // Only show server mode devices
+                    if (cfg.hostMode == 0) {// Only show server mode devices
+                        Log.i(TAG, "DEV: " + cfg.title + " MAC:" + cfg.mac);
                         postNewDevice(getEthDeviceSpec(cfg));
+                    }
                 }
             }
         }
