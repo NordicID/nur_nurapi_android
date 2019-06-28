@@ -204,7 +204,12 @@ public class BleScanner {
 
         if (mScanning) {
             mScanning = false;
-            mScanner.stopScan(mScanCallback);
+            try {
+                mScanner.stopScan(mScanCallback);
+            }
+            catch (Exception e) {
+                Log.e(TAG,"onScanFinished:" + e.getMessage());
+            }
         }
 
         if (listenerCount() > 0) {
