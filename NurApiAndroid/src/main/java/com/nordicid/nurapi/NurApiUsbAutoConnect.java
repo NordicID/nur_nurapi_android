@@ -108,6 +108,8 @@ public class NurApiUsbAutoConnect implements NurApiAutoConnectTransport
 					} 
 					else {
 						Log.d(TAG, "ACTION_USB_DEVICE_ATTACHED permission denied for device " + mUsbDevice);
+						Log.d(TAG, "FORCE CONNECTION to" + getAddress());
+						NurApiUsbAutoConnect.this.setAddress(getAddress());
 					}
 				}
 			} 
