@@ -13,6 +13,7 @@ import com.nordicid.nurapi.BleScanner.BleScannerListener;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -161,7 +162,8 @@ public class NurDeviceScanner implements BleScannerListener {
     }
 
     private boolean requestingIntDevice() {
-        String manufacturer = Build.MANUFACTURER.toLowerCase();
+        String manufacturer = Build.MANUFACTURER.toLowerCase(Locale.ENGLISH);
+        Log.i(TAG,"Manuf Lower = " + manufacturer + " Orig = " + Build.MANUFACTURER);
         return (manufacturer.contains("nordicid") || manufacturer.contains("nordic id"));
     }
 
@@ -411,7 +413,7 @@ public class NurDeviceScanner implements BleScannerListener {
             return true;
         if (deviceName == null)
             return false;
-        if (deviceName.toLowerCase().contains(NID_FILTER))
+        if (deviceName.toLowerCase(Locale.ENGLISH).contains(NID_FILTER))
             return true;
         return false;
     }

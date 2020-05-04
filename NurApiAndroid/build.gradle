@@ -80,5 +80,5 @@ dependencies {
     compileOnly fileTree(include: ['*.jar'], dir: 'libs')
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
-    implementation 'no.nordicsemi.android.support.v18:scanner:1.0.0'
+    implementation 'no.nordicsemi.android.support.v18:scanner:1.4.3'
 }

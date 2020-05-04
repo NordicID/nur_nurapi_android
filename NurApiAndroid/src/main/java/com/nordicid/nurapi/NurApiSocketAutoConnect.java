@@ -29,6 +29,7 @@ import android.util.Log;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Locale;
 
 public class NurApiSocketAutoConnect implements NurApiAutoConnectTransport
 {
@@ -124,7 +125,7 @@ public class NurApiSocketAutoConnect implements NurApiAutoConnectTransport
 		disconnect();
 
 		mInvalidAddress = false;
-		if (addr.toLowerCase().equals("disabled"))
+		if (addr.toLowerCase(Locale.ENGLISH).equals("disabled"))
 		{
 			Log.d(TAG, "setAddress DISABLED");
 			disconnect();
@@ -132,7 +133,7 @@ public class NurApiSocketAutoConnect implements NurApiAutoConnectTransport
 			return;
 		}
 
-		if (addr.toLowerCase().equals("integrated_reader"))
+		if (addr.toLowerCase(Locale.ENGLISH).equals("integrated_reader"))
 		{
 			mHost = "integrated_reader";
 			mPort = 0;

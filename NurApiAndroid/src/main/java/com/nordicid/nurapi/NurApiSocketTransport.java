@@ -12,6 +12,7 @@ import java.net.SocketAddress;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.util.Locale;
 
 import android.util.Log;
 
@@ -64,7 +65,7 @@ public class NurApiSocketTransport implements NurApiTransport
 			try {
 				String host = mHost;
 				int port = mPort;
-				if (mHost.toLowerCase().equals("integrated_reader")) {
+				if (mHost.toLowerCase(Locale.ENGLISH).equals("integrated_reader")) {
 					host = "localhost";
 					port = 6734;
 				}
