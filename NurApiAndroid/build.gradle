@@ -23,7 +23,7 @@ android {
     buildToolsVersion '28.0.3'
 
     /* Always remove NurApi.jar when doing clean build. Will downloaded in preBuild step */
-    clean << {
+    clean  {
         def f = new File('NurApiAndroid/libs/NurApi.jar')
         if (f.exists()) {
             println 'Deleted NurApi.jar'
@@ -32,8 +32,7 @@ android {
     }
 
     /* Download NurApi.jar if missing */
-    /*
-    preBuild << {
+    preBuild  {
         def f = new File('NurApiAndroid/libs/NurApi.jar')
         if (!f.exists()) {
             println 'Downloading latest NurApi.jar'
@@ -41,7 +40,6 @@ android {
             println 'Done'
         }
     }
-    */
 
     android.libraryVariants.all { variant ->
         variant.outputs.all {
@@ -53,13 +51,15 @@ android {
     }
 
     android.libraryVariants.all { variant ->
-        variant.assemble.doLast {
-            if ("${variant.name}" == "release") {
-                copy {
-                    from('build/outputs/aar') {
-                        include 'NurApiAndroid.aar'
+        variant.getAssembleProvider().configure() {
+            it.doLast {
+                if ("${variant.name}" == "release") {
+                    copy {
+                        from('build/outputs/aar') {
+                            include 'NurApiAndroid.aar'
+                        }
+                        into '../prebuilt'
                     }
-                    into '../prebuilt'
                 }
             }
         }
@@ -77,7 +77,7 @@ task sourcesJar(type: Jar) {
 }
 
 dependencies {
-    compileOnly fileTree(include: ['*.jar'], dir: 'libs')
+    api fileTree(include: ['*.jar'], dir: 'libs')
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
     implementation 'no.nordicsemi.android.support.v18:scanner:1.4.3'
