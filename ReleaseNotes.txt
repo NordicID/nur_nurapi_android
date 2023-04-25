@@ -1,6 +1,15 @@
+v2.0.31
+- Fixed perbuild
+
 v2.0.30
  - NurApiUsbAutoConnect: Fix error that made the RFID got disconnected when any USB device
    is disconnected instead of disconnecting only when the Nur device is disconnected
+
+v2.0.21
+- Uodated Gradle version to build project
+
+v2.0.20
+- USB fixes
 
 v2.0.14
 - Device scan: Removed mDNS scan as NurApi (ver 1.8.1.38) queryEthernet() support it now.

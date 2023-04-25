@@ -4,7 +4,7 @@ android {
     compileSdkVersion 33
     defaultConfig {
         def nurapiVersionCode = 41
-        def nurapiVersion = "2.0.30"
+        def nurapiVersion = "2.0.31"
 
         minSdkVersion 21
         targetSdkVersion 33
@@ -30,8 +30,7 @@ android {
     }
 
     /* Download NurApi.jar if missing */
-    /*
-    preBuild << {
+    preBuild.doLast {
         def f = new File('NurApiAndroid/libs/NurApi.jar')
         if (!f.exists()) {
             println 'Downloading latest NurApi.jar'
@@ -39,7 +38,6 @@ android {
             println 'Done'
         }
     }
-    */
 
     android.libraryVariants.all { variant ->
         variant.outputs.all {
