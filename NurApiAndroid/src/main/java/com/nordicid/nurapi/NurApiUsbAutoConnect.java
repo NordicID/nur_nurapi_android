@@ -99,7 +99,7 @@ public class NurApiUsbAutoConnect implements NurApiAutoConnectTransport {
         this.mApi = na;
         this.mUsbManager = (UsbManager) mContext.getSystemService(Context.USB_SERVICE);
 
-        mPermissionIntent = PendingIntent.getBroadcast(mContext, 0, new Intent(ACTION_USB_PERMISSION), 0);
+        mPermissionIntent = PendingIntent.getBroadcast(mContext, 0, new Intent(ACTION_USB_PERMISSION), PendingIntent.FLAG_IMMUTABLE);
     }
 
     private final BroadcastReceiver mUsbReceiver = new BroadcastReceiver() {
