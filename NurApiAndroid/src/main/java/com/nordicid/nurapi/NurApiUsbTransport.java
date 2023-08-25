@@ -18,6 +18,7 @@
 package com.nordicid.nurapi;
 
 import java.io.IOException;
+import java.nio.file.attribute.UserDefinedFileAttributeView;
 
 import android.hardware.usb.UsbConstants;
 import android.hardware.usb.UsbDevice;
@@ -120,7 +121,7 @@ public class NurApiUsbTransport implements NurApiTransport
 				throw new Exception("Invalid interface count");
 			}
 
-			mInterface = mDevice.getInterface(1);
+			mInterface = getUsbInterface(mDevice);
 			mDeviceConnection.claimInterface(mInterface, true);
 	
 			int endPts = mInterface.getEndpointCount();
@@ -196,5 +197,23 @@ public class NurApiUsbTransport implements NurApiTransport
 	public boolean disableAck()
 	{
 		return true;
+	}
+
+	/**
+	 * Get interface
+	 * 
+	 * @param device See {@link #android.hardware.usb.UsbDevice}.
+	 */
+	private UsbInterface getUsbInterface(UsbDevice device)
+	{
+  		int interfaceCount = device.getInterfaceCount();
+  		for (int index = 0; index < interfaceCount; index++)
+  		{
+	    	if (device.getInterface(index).getInterfaceClass() == UsbConstants.USB_CLASS_CDC_DATA)
+    		{
+      			return device.getInterface(index);
+    		}
+  		}
+  		return device.getInterface(1);
 	}
 }
