@@ -18,6 +18,7 @@
 package com.nordicid.nurapi;
 
 import java.io.IOException;
+import java.nio.file.attribute.UserDefinedFileAttributeView;
 
 import android.hardware.usb.UsbConstants;
 import android.hardware.usb.UsbDevice;
@@ -115,12 +116,11 @@ public class NurApiUsbTransport implements NurApiTransport
 		{
 			mDeviceConnection = mManager.openDevice(mDevice);
 	
-			if (mDevice.getInterfaceCount() != 2)
+			mInterface = getUsbInterface(mDevice);
+			if (mInterface == null)
 			{
-				throw new Exception("Invalid interface count");
+				throw new Exception("No USB interface found");
 			}
-
-			mInterface = mDevice.getInterface(1);
 			mDeviceConnection.claimInterface(mInterface, true);
 	
 			int endPts = mInterface.getEndpointCount();
@@ -153,7 +153,6 @@ public class NurApiUsbTransport implements NurApiTransport
 		{
 			Log.d(TAG, "connect failed: " + ex.getMessage());
 			disconnect();
-			throw ex;
 		}
 	}
 
@@ -196,5 +195,30 @@ public class NurApiUsbTransport implements NurApiTransport
 	public boolean disableAck()
 	{
 		return true;
+	}
+
+	/**
+	 * Get interface
+	 * 
+	 * @param device See {@link #android.hardware.usb.UsbDevice}.
+	 */
+	private UsbInterface getUsbInterface(UsbDevice device)
+	{
+  		int interfaceCount = device.getInterfaceCount();
+  		for (int i = 0; i < interfaceCount; i++)
+  		{
+	    	if (device.getInterface(i).getInterfaceClass() == UsbConstants.USB_CLASS_CDC_DATA)
+    		{
+				Log.d(TAG, "UsbInterface = CDC in index: " + i);
+				return device.getInterface(i);
+    		}
+  		}
+
+		Log.d(TAG, "UsbInterface = No CDC found");
+		if (interfaceCount >= 2)
+		{
+			return device.getInterface(1);
+		}
+		return null;
 	}
 }
