@@ -1,3 +1,6 @@
+v2.0.60
+ -USB CDC profile handling support
+
 v2.0.50
  -Fix USB connection to connect reader in Android 12 or higher
 

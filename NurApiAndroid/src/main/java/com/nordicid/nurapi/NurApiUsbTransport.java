@@ -116,12 +116,11 @@ public class NurApiUsbTransport implements NurApiTransport
 		{
 			mDeviceConnection = mManager.openDevice(mDevice);
 	
-			if (mDevice.getInterfaceCount() != 2)
-			{
-				throw new Exception("Invalid interface count");
-			}
-
 			mInterface = getUsbInterface(mDevice);
+			if (mInterface == null)
+			{
+				throw new Exception("No USB interface found");
+			}
 			mDeviceConnection.claimInterface(mInterface, true);
 	
 			int endPts = mInterface.getEndpointCount();
@@ -154,7 +153,6 @@ public class NurApiUsbTransport implements NurApiTransport
 		{
 			Log.d(TAG, "connect failed: " + ex.getMessage());
 			disconnect();
-			throw ex;
 		}
 	}
 
@@ -207,13 +205,20 @@ public class NurApiUsbTransport implements NurApiTransport
 	private UsbInterface getUsbInterface(UsbDevice device)
 	{
   		int interfaceCount = device.getInterfaceCount();
-  		for (int index = 0; index < interfaceCount; index++)
+  		for (int i = 0; i < interfaceCount; i++)
   		{
-	    	if (device.getInterface(index).getInterfaceClass() == UsbConstants.USB_CLASS_CDC_DATA)
+	    	if (device.getInterface(i).getInterfaceClass() == UsbConstants.USB_CLASS_CDC_DATA)
     		{
-      			return device.getInterface(index);
+				Log.d(TAG, "UsbInterface = CDC in index: " + i);
+				return device.getInterface(i);
     		}
   		}
-  		return device.getInterface(1);
+
+		Log.d(TAG, "UsbInterface = No CDC found");
+		if (interfaceCount >= 2)
+		{
+			return device.getInterface(1);
+		}
+		return null;
 	}
 }
