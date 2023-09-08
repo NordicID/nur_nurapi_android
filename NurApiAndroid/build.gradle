@@ -1,13 +1,14 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 33
+    namespace "com.nordicid.nurapi"
+    compileSdk 33
     defaultConfig {
-        def nurapiVersionCode = 60
-        def nurapiVersion = "2.0.60"
+        def nurapiVersionCode = 70
+        def nurapiVersion = "2.0.70"
 
         minSdkVersion 21
-        targetSdkVersion 33
+        targetSdk 33
         versionCode nurapiVersionCode
         versionName nurapiVersion
         buildConfigField "String", "NURVERSION", "\"$nurapiVersion\""
@@ -39,6 +40,7 @@ android {
         }
     }
 
+    android.buildFeatures.buildConfig true
     android.libraryVariants.all { variant ->
         variant.outputs.all {
             if ("${variant.name}" == "debug")

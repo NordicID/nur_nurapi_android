@@ -1,12 +1,15 @@
+v2.0.70
+ - Added mssing accesrroies support
+
 v2.0.60
- -USB CDC profile handling support
+ - USB CDC profile handling support
 
 v2.0.50
- -Fix USB connection to connect reader in Android 12 or higher
+ - Fixed USB connection to connect reader in Android 12 or higher
 
 v2.0.42
- -Fix version mismatch
- -Android 13 support
+ - Fix version mismatch
+ - Android 13 support
 
 v2.0.31
 - Fixed perbuild

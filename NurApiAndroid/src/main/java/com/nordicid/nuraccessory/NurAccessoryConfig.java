@@ -281,6 +281,16 @@ public class NurAccessoryConfig
 		return newConfig;		
 	}
 
+		/**
+ 	* Get whether the device is configured as EXA81 reader.
+ 	* @return Returns true if the reader is EXA81.
+ 	*/
+	public boolean isDeviceEXA81()
+	{			
+		return (hasImagerScanner() && ((configValue & CONFIG_FLAG_EXA51) == 0) && ((configValue & CONFIG_FLAG_EXA31) == 0));
+	}
+
+	
 	/**
 	 * Get whether the device is configured as EXA51 reader.
 	 * @return Returns true if the reader is EXA51.
@@ -300,15 +310,28 @@ public class NurAccessoryConfig
 	}
 
 	/**
+	 * Get whether the device is configured as EXA21 reader.
+	 * @return Returns true if the reader is EXA21.
+	 */
+	public boolean isDeviceEXA21()
+	{			
+		return hasImagerScanner() ? false:true; //not good way but only one..				
+	}
+	
+	/**
 	 * Get device name EXA51 or EXA31
 	 * @return String with device Name
 	 */
 	public String getDeviceType()
 	{
-		if (isDeviceEXA31())
+		if (isDeviceEXA21())
+			return "EXA21";
+		else if (isDeviceEXA31())
 			return "EXA31";
-		if (isDeviceEXA51())
+		else if (isDeviceEXA51())
 			return "EXA51";
+		else if (isDeviceEXA81())
+			return "EXA81";
 		return "N/A";
 	}
 
