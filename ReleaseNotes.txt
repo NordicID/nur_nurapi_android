@@ -1,3 +1,6 @@
+v2.0.71
+ - Fix USB CDC profile detection
+
 v2.0.70
  - Added mssing accesrroies support
 
