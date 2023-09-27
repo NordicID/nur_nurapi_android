@@ -4,8 +4,8 @@ android {
     namespace "com.nordicid.nurapi"
     compileSdk 33
     defaultConfig {
-        def nurapiVersionCode = 70
-        def nurapiVersion = "2.0.70"
+        def nurapiVersionCode = 71
+        def nurapiVersion = "2.0.71"
 
         minSdkVersion 21
         targetSdk 33

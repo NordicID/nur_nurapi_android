@@ -74,7 +74,6 @@ public class NurApiUsbTransport implements NurApiTransport
 
 		try {
 			ret = mDeviceConnection.bulkTransfer(mInput, buffer, buffer.length, TRANSFER_TIMEOUT);
-			//Log.d(TAG, "readData ret: " + ret);
 		} catch (Exception e)
 		{
 			Log.d(TAG, "readData error: " + e.getMessage());
@@ -97,7 +96,6 @@ public class NurApiUsbTransport implements NurApiTransport
 
 		try {
 			ret = mDeviceConnection.bulkTransfer(mOutput, buffer, len, TRANSFER_TIMEOUT);
-			//Log.d(TAG, "writeData ret: " + ret);
 		} catch (Exception e)
 		{
 			Log.d(TAG, "writeData error: " + e.getMessage());
@@ -116,11 +114,12 @@ public class NurApiUsbTransport implements NurApiTransport
 		{
 			mDeviceConnection = mManager.openDevice(mDevice);
 	
-			mInterface = getUsbInterface(mDevice);
-			if (mInterface == null)
+			int cdcIndex = getCDC();
+			if (cdcIndex == -1)
 			{
 				throw new Exception("No USB interface found");
 			}
+			mInterface = mDevice.getInterface(cdcIndex);
 			mDeviceConnection.claimInterface(mInterface, true);
 	
 			int endPts = mInterface.getEndpointCount();
@@ -198,27 +197,20 @@ public class NurApiUsbTransport implements NurApiTransport
 	}
 
 	/**
-	 * Get interface
-	 * 
-	 * @param device See {@link #android.hardware.usb.UsbDevice}.
+	 * Get CDC index
 	 */
-	private UsbInterface getUsbInterface(UsbDevice device)
+	private int getCDC()
 	{
-  		int interfaceCount = device.getInterfaceCount();
-  		for (int i = 0; i < interfaceCount; i++)
-  		{
-	    	if (device.getInterface(i).getInterfaceClass() == UsbConstants.USB_CLASS_CDC_DATA)
-    		{
-				Log.d(TAG, "UsbInterface = CDC in index: " + i);
-				return device.getInterface(i);
-    		}
-  		}
-
-		Log.d(TAG, "UsbInterface = No CDC found");
-		if (interfaceCount >= 2)
+		int interfaceCount = mDevice.getInterfaceCount();
+		for (int index = 0; index < interfaceCount; index++)
 		{
-			return device.getInterface(1);
+			if (mDevice.getInterface(index).getInterfaceClass() == UsbConstants.USB_CLASS_CDC_DATA)
+			{
+				Log.d(TAG, "CDC interface found in index: " + index);
+				return index;
+			}
 		}
-		return null;
+		Log.d(TAG, "No CDC interface found");
+  		return -1;
 	}
 }
