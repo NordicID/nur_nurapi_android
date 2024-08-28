@@ -2,13 +2,13 @@ apply plugin: 'com.android.library'
 
 android {
     namespace "com.nordicid.nurapi"
-    compileSdk 33
+    compileSdk 34
     defaultConfig {
-        def nurapiVersionCode = 71
-        def nurapiVersion = "2.0.71"
+        def nurapiVersionCode = 72
+        def nurapiVersion = "2.1.0"
 
         minSdkVersion 21
-        targetSdk 33
+        targetSdk 34
         versionCode nurapiVersionCode
         versionName nurapiVersion
         buildConfigField "String", "NURVERSION", "\"$nurapiVersion\""
@@ -26,7 +26,7 @@ android {
         def f = new File('NurApiAndroid/libs/NurApi.jar')
         if (f.exists()) {
             println 'Deleted NurApi.jar'
-            f.delete();
+            f.delete()
         }
     }
 

@@ -25,6 +25,7 @@ import android.content.IntentFilter;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 //import android.util.Log;
+import android.os.Build;
 import android.os.Handler;
 import android.util.Log;
 
@@ -88,7 +89,12 @@ public class NurApiUsbAutoConnect implements NurApiAutoConnectTransport {
             intentFilter.addAction(ACTION_USB_PERMISSION);
             intentFilter.addAction(action);
             Log.d(TAG, "registerReceiver " + action + " registered");
-            mContext.registerReceiver(mUsbReceiver, intentFilter);
+
+            if (Build.VERSION.SDK_INT >= 34 && mContext.getApplicationInfo().targetSdkVersion >= 34)
+                mContext.registerReceiver(mUsbReceiver, intentFilter, Context.RECEIVER_EXPORTED);
+            else
+                mContext.registerReceiver(mUsbReceiver, intentFilter);
+
             mReceiverRegistered = true;
             mReceiverRegisteredAction = action;
         }
