@@ -1,3 +1,7 @@
+v2.1.0
+ - Android API 34 update
+ - Fix USB autoconnection with ANdroid 14
+
 v2.0.71
  - Fix USB CDC profile detection
 
