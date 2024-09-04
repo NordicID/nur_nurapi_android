@@ -42,7 +42,7 @@
             android:layout_height="1dp"
             android:layout_marginBottom="5dp"
             android:layout_marginTop="60dp"
-            android:background="@android:color/holo_orange_dark"/>
+            android:background="#C0C0C0"/>
 
         <ProgressBar
             android:id="@+id/scan_progress"
