@@ -1,3 +1,7 @@
+v2.2.3
+ - Added support for layout color
+ - Cut dialog title bar
+
 v2.1.0
  - Android API 34 update
  - Fix USB autoconnection with ANdroid 14
