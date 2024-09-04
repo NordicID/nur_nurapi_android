@@ -5,11 +5,11 @@ package com.nordicid.nurapi;
  */
 public final class NurApiAndroid {
     /** Get NurApiAndroid library version string */
-    static public final String getVersion() {
+    static public String getVersion() {
         return BuildConfig.NURVERSION;
     }
     /** Get NurApiAndroid library version code */
-    static public final int getVersionCode() {
+    static public int getVersionCode() {
         return BuildConfig.NURVERSIONCODE;
     }
 }

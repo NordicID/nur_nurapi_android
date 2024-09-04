@@ -16,7 +16,6 @@
 */
 package com.nordicid.nurapi;
 
-import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -52,13 +51,13 @@ public class NurApiUsbAutoConnect implements NurApiAutoConnectTransport {
      */
     private static final int NUR_PRODUCT_ID_2 = 2321;
 
-    private NurApi mApi = null;
-    private Context mContext = null;
-    private UsbManager mUsbManager = null;
+    private final NurApi mApi;
+    private final Context mContext;
+    private final UsbManager mUsbManager;
     private UsbDevice mUsbDevice = null;
     private static final String ACTION_USB_PERMISSION = "com.nordicid.nurapi.USB_PERMISSION";
     private boolean mReceiverRegistered = false;
-    private PendingIntent mPermissionIntent;
+    private final PendingIntent mPermissionIntent;
     private boolean mRequestingPermission = false;
 
     private String mReceiverRegisteredAction = "";
@@ -66,7 +65,7 @@ public class NurApiUsbAutoConnect implements NurApiAutoConnectTransport {
     private boolean mEnabled = false;
 
     void registerReceiver(String action) {
-        if (action.length() == 0) {
+        if (action.isEmpty()) {
             if (mReceiverRegistered) {
                 mReceiverRegistered = false;
                 mReceiverRegisteredAction = "";
@@ -215,7 +214,7 @@ public class NurApiUsbAutoConnect implements NurApiAutoConnectTransport {
 
         Log.d(TAG, "setAddress " + addr);
 
-        mEnabled = addr.length() > 0;
+        mEnabled = !addr.isEmpty();
 
         this.mUsbDevice = null;
         for (UsbDevice device : mUsbManager.getDeviceList().values()) {
@@ -232,12 +231,7 @@ public class NurApiUsbAutoConnect implements NurApiAutoConnectTransport {
         }
 
         if (mUsbDevice != null) {
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    connect();
-                }
-            }, 200);
+            new Handler().postDelayed(this::connect, 200);
         }
     }
 

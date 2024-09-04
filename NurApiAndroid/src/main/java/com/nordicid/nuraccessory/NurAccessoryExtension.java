@@ -36,7 +36,7 @@ public class NurAccessoryExtension implements NurApiUnknownEventListener {
 	public static final String TAG = "AccessoryExtension";
 
 	/** The API instance of that the extension uses. */
-	private NurApi mApi = null;
+	private NurApi mApi;
 
 	/** The event number associated with barcode scan event (Previous version). */
 	private static final int EVENT_ACCESSORY_BARCODE_OLD = 0x83;
@@ -122,7 +122,7 @@ public class NurAccessoryExtension implements NurApiUnknownEventListener {
 	/** Character set used to interpret the barcode. */
 	private String mBarcodeCharSet = "UTF-8";
 
-	/** Indicates whether the barcode scan was canceled during the response wait. */
+	/* Indicates whether the barcode scan was canceled during the response wait. */
 	// private boolean mBarcodeCanceled = false;
 
 	/**
@@ -256,7 +256,7 @@ public class NurAccessoryExtension implements NurApiUnknownEventListener {
 	{
 		// Get payload from the configuration class.
 		byte []payload = NurAccessoryConfig.getQueryCommand();
-		byte []reply = null;
+		byte []reply;
 		
 		// Get response byte by executing this as a "custom command". 
 		reply = mApi.customCmd(NUR_CMD_ACC_EXT, payload);
@@ -356,7 +356,7 @@ public class NurAccessoryExtension implements NurApiUnknownEventListener {
 		String strVersion;
 		try {
 			strVersion = getFwVersion().getFullApplicationVersion();
-			// Log.d(TAG, "isSupported: version = \"" + strVersion + "\".");
+			Log.d(TAG, "isSupported: version = \"" + strVersion + "\".");
 		}
 		catch (Exception e)
 		{
@@ -424,7 +424,6 @@ public class NurAccessoryExtension implements NurApiUnknownEventListener {
 		params[0] = ACC_EXT_IMAGER;
 		params[1] = ACC_EXT_IMAGER_AIM;
 		if(aim) params[2] = 1;
-		else params[2] = 0;
 		mApi.customCmd(NUR_CMD_ACC_EXT, params);
 	}
 
@@ -440,8 +439,8 @@ public class NurAccessoryExtension implements NurApiUnknownEventListener {
 	 * @return Response from imager as byte array. See documentation of imager.
 	 */
 	public byte [] imagerCmd( String cmd, int type) throws Exception {
-		int x = 0;
-		int len = 0;
+		int x;
+		int len;
 
 		if (type == IMAGER_TYPE_OPTICON)
 		{
@@ -485,7 +484,7 @@ public class NurAccessoryExtension implements NurApiUnknownEventListener {
 
 	private byte [] ConvertMenuToSerial(String txt)
 	{
-		int i=0;
+		int i;
 		int dest = 0;
 
 		byte[] b = txt.getBytes(StandardCharsets.UTF_8);
@@ -548,7 +547,7 @@ public class NurAccessoryExtension implements NurApiUnknownEventListener {
 
 			reply = mApi.customCmd(NUR_CMD_ACC_EXT, new byte[] { (byte) ACC_EXT_GET_HEALTHSTATE});
 			if (reply != null && reply.length > 0) {
-				pairs = (new String(reply, 0, reply.length, StandardCharsets.US_ASCII)).split(";");
+				pairs = (new String(reply, StandardCharsets.US_ASCII)).split(";");
 				result = new String [pairs.length] [];
 				for (i=0;i<result.length;i++)
 					result[i] = pairs[i].split("=");
@@ -604,7 +603,7 @@ public class NurAccessoryExtension implements NurApiUnknownEventListener {
      */
 	public int setWirelessChargingOn(boolean on)
 	{
-		int rc = WIRELESS_CHARGING_OFF;
+		int rc;
 		byte []payload = new byte[2];
 		byte []reply;
 
@@ -691,7 +690,7 @@ public class NurAccessoryExtension implements NurApiUnknownEventListener {
     public static String []splitByChar(String stringToSplit, char separator, boolean removeEmpty)
     {
         String expression;
-        ArrayList<String> strList = new ArrayList<String>();
+        ArrayList<String> strList = new ArrayList<>();
         String []arr;
         String tmp;
 
@@ -702,7 +701,7 @@ public class NurAccessoryExtension implements NurApiUnknownEventListener {
         {
             tmp = s.trim();
             if (removeEmpty && tmp.isEmpty())
-                continue;;
+                continue;
             strList.add(tmp);
         }
 
@@ -740,10 +739,8 @@ public class NurAccessoryExtension implements NurApiUnknownEventListener {
 		if (strVersion == null)
 			return intVersion;
 
-		intVersion = NurAccessoryExtension.INTVALUE_NOT_VALID;
-
-		strArr = splitByChar(strVersion, '.');
-		if (strArr == null || strArr.length != 3)
+        strArr = splitByChar(strVersion, '.');
+		if (strArr.length != 3)
 			return intVersion;
 
 		try {
@@ -759,7 +756,7 @@ public class NurAccessoryExtension implements NurApiUnknownEventListener {
 				intVersion |= c;
 			}
 		}
-		catch (Exception ex) { }
+		catch (Exception ignored) { }
 
 		return intVersion;
 	}

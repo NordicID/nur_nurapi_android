@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 public class NurDeviceScanner implements BleScannerListener {
@@ -24,22 +25,21 @@ public class NurDeviceScanner implements BleScannerListener {
     public static final long MIN_SCAN_PERIOD = 1000;
     public static final long MAX_SCAN_PERIOD = 60000;
     public static final long DEF_SCAN_PERIOD = 10000;
-    public static final int REQ_BLE_DEVICES = (1 << 0);
+    public static final int REQ_BLE_DEVICES = (1);
     public static final int REQ_USB_DEVICES = (1 << 1);
     public static final int REQ_ETH_DEVICES = (1 << 2);
     public static final int LAST_DEVICE = REQ_ETH_DEVICES;
     public static final int ALL_DEVICES = (LAST_DEVICE << 1) - 1;
-    private int mRequestedDevices = ALL_DEVICES;
+    private final int mRequestedDevices;
     private Long mScanPeriod = DEF_SCAN_PERIOD;
     private boolean mCheckNordicID;
-    private NurApi mApi;
-    private List<NurDeviceSpec> mDeviceList;
-    private Handler mHandler;
-    private Runnable mEthQueryRunnable;
+    private final NurApi mApi;
+    private final List<NurDeviceSpec> mDeviceList;
+    private final Handler mHandler;
     private  boolean mEthQueryRunning = false;
     private boolean mScanning = false;
-    private Context mOwner = null;
-    private NurDeviceScannerListener mListener = null;
+    private final Context mOwner;
+    private NurDeviceScannerListener mListener;
 
     public interface NurDeviceScannerListener{
         void onScanStarted();
@@ -47,12 +47,12 @@ public class NurDeviceScanner implements BleScannerListener {
         void onScanFinished();
     }
 
-    public NurDeviceScanner(Context context, int requestedDevices, NurApi mApi){
+    public NurDeviceScanner(Context context, int requestedDevices, NurApi mApi) {
         this(context,requestedDevices,null, mApi);
     }
 
     public NurDeviceScanner(Context context, int requestedDevices, NurDeviceScannerListener listener, NurApi api){
-        mDeviceList = new ArrayList<NurDeviceSpec>();
+        mDeviceList = new ArrayList<>();
         mOwner = context;
         mRequestedDevices = requestedDevices;
         mHandler = new Handler();
@@ -68,7 +68,7 @@ public class NurDeviceScanner implements BleScannerListener {
         mListener = null;
     }
 
-    public boolean scanDevices(Long timeout, boolean checkFilter){
+    public boolean scanDevices(Long timeout, boolean checkFilter) {
 
         if(mListener == null)
             return false;
@@ -84,7 +84,7 @@ public class NurDeviceScanner implements BleScannerListener {
         mScanPeriod = timeout;
         Log.i(TAG, "scanDevices; timeout " + timeout);
 
-        /** notify scan started **/
+        /* notify scan started */
         mListener.onScanStarted();
 
         if (requestingIntDevice()) {
@@ -109,18 +109,13 @@ public class NurDeviceScanner implements BleScannerListener {
         }
 
         // Stops scanning after a pre-defined scan period.
-        mHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                stopScan();
-            }
-        }, mScanPeriod);
+        mHandler.postDelayed(this::stopScan, mScanPeriod);
 
         return true;
     }
 
     public void scanDevices() {
-        if(mScanning == false)
+        if(!mScanning)
             scanDevices(mScanPeriod, mCheckNordicID);
     }
 
@@ -142,23 +137,15 @@ public class NurDeviceScanner implements BleScannerListener {
     }
 
     private boolean requestingBLEDevices() {
-        if ((mRequestedDevices & REQ_BLE_DEVICES) != 0)
-            return true;
-        return false;
+        return (mRequestedDevices & REQ_BLE_DEVICES) != 0;
     }
 
     private boolean requestingUSBDevice() {
-        if ((mRequestedDevices & REQ_USB_DEVICES) != 0)
-            return true;
-
-        return false;
+        return (mRequestedDevices & REQ_USB_DEVICES) != 0;
     }
 
     private boolean requestingETHDevice() {
-        if ((mRequestedDevices & REQ_ETH_DEVICES) != 0)
-            return true;
-
-        return false;
+        return (mRequestedDevices & REQ_ETH_DEVICES) != 0;
     }
 
     private boolean requestingIntDevice() {
@@ -178,7 +165,7 @@ public class NurDeviceScanner implements BleScannerListener {
                 break;
             }
         }
-        /** device is new **/
+        /* device is new */
         if (!deviceFound) {
             Log.i(TAG, "New device found : " + device.getSpec());
             mDeviceList.add(device);
@@ -187,6 +174,7 @@ public class NurDeviceScanner implements BleScannerListener {
                 mListener.onDeviceFound(device);
         }
     }
+
 
     public List<NurDeviceSpec> getDeviceList(){ return mDeviceList; }
 
@@ -201,19 +189,14 @@ public class NurDeviceScanner implements BleScannerListener {
     }
 
     public void queryEthernetDevices(){
-        mEthQueryRunnable = new Runnable() {
-            @Override
-            public void run() {
-                ethQueryWorker();
-            }
-        };
+        Runnable mEthQueryRunnable = this::ethQueryWorker;
         mEthQueryRunning = true;
         (new Thread(mEthQueryRunnable)).start();
     }
 
     private void ethQueryWorker()
     {
-        ArrayList<NurEthConfig> theDevices = null;
+        ArrayList<NurEthConfig> theDevices;
         try {
             while (mScanning) {
                 theDevices = mApi.queryEthDevices();
@@ -327,7 +310,7 @@ public class NurDeviceScanner implements BleScannerListener {
                     type = new String(map.get("TYPE")).toUpperCase();
                 }
 
-                if (host.getHostAddress().contains(":")) {
+                if (Objects.requireNonNull(host.getHostAddress()).contains(":")) {
                     Log.e(TAG, "IPV6 not supported");
                 } else {
                     postNewDevice(new NurDeviceSpec("type=TCP;addr=" + host.getHostAddress() + ":" + port + ";port=" + port + ";name=" + name + ";transport=" + type));
@@ -338,12 +321,7 @@ public class NurDeviceScanner implements BleScannerListener {
 
     private void postNewDevice(final NurDeviceSpec device)
     {
-        mHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                addDevice(device);
-            }
-        });
+        mHandler.post(() -> addDevice(device));
     }
 
     private NurDeviceSpec getEthDeviceSpec(NurEthConfig ethCfg) {
@@ -370,12 +348,7 @@ public class NurDeviceScanner implements BleScannerListener {
         if (checkNIDBLEFilter(name))
         {
             if( mApi != null && mApi.getUiThreadRunner() != null) {
-                mApi.getUiThreadRunner().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        addDevice(getBtDeviceSpec(device, name, false, rssi));
-                    }
-                });
+                mApi.getUiThreadRunner().runOnUiThread(() -> addDevice(getBtDeviceSpec(device, name, false, rssi)));
             } else {
                 addDevice(getBtDeviceSpec(device, name, false, rssi));
             }
@@ -394,8 +367,8 @@ public class NurDeviceScanner implements BleScannerListener {
         }
 
         // Add paired
-        Set<BluetoothDevice> pairedDevices = BleScanner.getInstance().getPairedDevices();
-        if (pairedDevices.size() > 0) {
+        Set<BluetoothDevice> pairedDevices = BleScanner.getPairedDevices();
+        if (!pairedDevices.isEmpty()) {
             for (BluetoothDevice device : pairedDevices) {
                 if (BleScanner.isBleDevice(device) && checkNIDBLEFilter(device.getName()))
                     addDevice(getBtDeviceSpec(device, device.getName(), true, 0));
@@ -413,14 +386,12 @@ public class NurDeviceScanner implements BleScannerListener {
             return true;
         if (deviceName == null)
             return false;
-        if (deviceName.toLowerCase(Locale.ENGLISH).contains(NID_FILTER))
-            return true;
-        return false;
+        return deviceName.toLowerCase(Locale.ENGLISH).contains(NID_FILTER);
     }
 
     private NurDeviceSpec getBtDeviceSpec(BluetoothDevice device, String name, boolean bonded, int rssi) {
         if (name == null || name.equals("null")) {
-            name = device.getAddress().toString();
+            name = device.getAddress();
         }
 
         return new NurDeviceSpec("type=BLE;addr="+device.getAddress()+";name="+name+";bonded="+bonded+";rssi="+rssi);

@@ -17,9 +17,6 @@
 
 package com.nordicid.nurapi;
 
-import java.io.IOException;
-import java.nio.file.attribute.UserDefinedFileAttributeView;
-
 import android.hardware.usb.UsbConstants;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
@@ -38,8 +35,8 @@ public class NurApiUsbTransport implements NurApiTransport
 {
 	static final String TAG = "NurApiUsbTransport";
 
-	private UsbManager mManager = null;
-	private UsbDevice mDevice = null;
+	private final UsbManager mManager;
+	private final UsbDevice mDevice;
 	private UsbDeviceConnection mDeviceConnection = null;
 	private UsbInterface mInterface = null;
 	
@@ -64,8 +61,7 @@ public class NurApiUsbTransport implements NurApiTransport
 	 * {@inheritDoc} 
 	 */
 	@Override
-	public int readData(byte []buffer) throws IOException
-	{
+	public int readData(byte []buffer) {
 		int ret = -1;
 		if (mDeviceConnection == null) {
 			Log.d(TAG, "readData mDeviceConnection == null");
@@ -86,8 +82,7 @@ public class NurApiUsbTransport implements NurApiTransport
 	 * {@inheritDoc} 
 	 */	
 	@Override
-	public int writeData(byte []buffer, int len) throws IOException
-	{
+	public int writeData(byte []buffer, int len) {
 		int ret = -1;
 		if (mDeviceConnection == null) {
 			Log.d(TAG, "writeData mDeviceConnection == null");
@@ -108,8 +103,7 @@ public class NurApiUsbTransport implements NurApiTransport
 	 * {@inheritDoc} 
 	 */	
 	@Override
-	public void connect() throws Exception
-	{
+	public void connect() {
 		try
 		{
 			mDeviceConnection = mManager.openDevice(mDevice);

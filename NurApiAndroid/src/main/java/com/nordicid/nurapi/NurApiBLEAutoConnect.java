@@ -17,8 +17,6 @@
 
 package com.nordicid.nurapi;
 
-import com.nordicid.nuraccessory.NurAccessoryExtension;
-
 import android.bluetooth.BluetoothAdapter;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -38,10 +36,10 @@ public class NurApiBLEAutoConnect implements UartServiceEvents, NurApiAutoConnec
 	public static final String TAG = "NurApiBLEAutoConnect";
 
 	// The API instance given to this autoconnection instance.
-	private NurApi mApi = null;
+	private final NurApi mApi;
 
 	// Context given to this autoconnect instance.
-	private Context mContext = null;
+	private final Context mContext;
 	
 	// The UART service required for this instance.
 	private UartService mService = null;
@@ -53,7 +51,7 @@ public class NurApiBLEAutoConnect implements UartServiceEvents, NurApiAutoConnec
 	private int mLastRemoteRssi = 0;
 
 	// The physical transport used here.
-	private NurApiBLETransport mTr = new NurApiBLETransport();
+	private final NurApiBLETransport mTr = new NurApiBLETransport();
 
 	public static final int STATE_DISCONNECTED = 0;
 	public static final int STATE_CONNECTING = 1;
@@ -61,7 +59,7 @@ public class NurApiBLEAutoConnect implements UartServiceEvents, NurApiAutoConnec
 	int mState = STATE_DISCONNECTED;
 
 	// UART service connected/disconnected
-    private ServiceConnection mServiceConnection = new ServiceConnection() 
+    private final ServiceConnection mServiceConnection = new ServiceConnection()
     {
 		@Override
         public void onServiceConnected(ComponentName className, IBinder rawBinder) 
@@ -79,7 +77,7 @@ public class NurApiBLEAutoConnect implements UartServiceEvents, NurApiAutoConnec
     		else
     		{
     			mService.setEventListener(NurApiBLEAutoConnect.this, mContext);
-    			if (!NurApiBLEAutoConnect.this.mAddr.equals("") && mService.getConnState() != UartService.STATE_CONNECTED)
+    			if (!NurApiBLEAutoConnect.this.mAddr.isEmpty() && mService.getConnState() != UartService.STATE_CONNECTED)
     				mService.connect(NurApiBLEAutoConnect.this.mAddr);
     		}
         }
@@ -144,7 +142,8 @@ public class NurApiBLEAutoConnect implements UartServiceEvents, NurApiAutoConnec
 					}
 	                break;
 	            case BluetoothAdapter.STATE_TURNING_OFF:
-	                break;
+                    case BluetoothAdapter.STATE_TURNING_ON:
+                        break;
 	            case BluetoothAdapter.STATE_ON:
 	            	try {
 						Thread.sleep(2000);
@@ -153,9 +152,7 @@ public class NurApiBLEAutoConnect implements UartServiceEvents, NurApiAutoConnec
 					}
 	            	onResumeInternal();
 	                break;
-	            case BluetoothAdapter.STATE_TURNING_ON:
-	                break;
-	            }
+                }
 	        }
 	    }
 	};

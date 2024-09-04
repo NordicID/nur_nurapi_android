@@ -19,10 +19,9 @@ package com.nordicid.nurapi;
 
 import android.content.Context;
 
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
+
 /**
  * Created by Nordic ID on 18.7.2016.
  */
@@ -30,7 +29,7 @@ public class NurDeviceSpec {
 
     private String mSpecStr = "";
     private boolean mNeedRegen = false;
-    private Map<String,String> mParams = new LinkedHashMap<String,String>();
+    private final Map<String,String> mParams = new LinkedHashMap<>();
     //private LinkedHashMap<String, String> mParams = new LinkedHashMap<String,String>();
 
     public void parse(String specStr)
@@ -96,20 +95,17 @@ public class NurDeviceSpec {
 
     private void regenerateSpec()
     {
-        String ret = "";
-        Iterator<Map.Entry<String,String>> itr = mParams.entrySet().iterator();
+        StringBuilder ret = new StringBuilder();
         //Iterator<LinkedHashMap.Entry<String,String>> itr = mParams.entrySet().iterator();
-        while (itr.hasNext())
-        {
+        for (Map.Entry<String, String> entry : mParams.entrySet()) {
             //LinkedHashMap.Entry<String,String> entry = itr.next();
-            Map.Entry<String,String> entry = itr.next();
             if (ret.length() > 0)
-                ret += ";";
-            ret += entry.getKey();
+                ret.append(";");
+            ret.append(entry.getKey());
             if (entry.getValue() != null)
-                ret += "=" + entry.getValue();
+                ret.append("=").append(entry.getValue());
         }
-        mSpecStr = ret;
+        mSpecStr = ret.toString();
         mNeedRegen = false;
     }
 
@@ -173,13 +169,10 @@ public class NurDeviceSpec {
     @Override
     public boolean equals(Object other)
     {
-        if (other == null || !(other instanceof NurDeviceSpec))
+        if (!(other instanceof NurDeviceSpec))
             return false;
 
-        if (((NurDeviceSpec)other).getSpec().equalsIgnoreCase(this.getSpec()))
-            return true;
-
-        return false;
+        return ((NurDeviceSpec) other).getSpec().equalsIgnoreCase(this.getSpec());
     }
 
     @Override
@@ -197,7 +190,6 @@ public class NurDeviceSpec {
             case "USB":
                 return new NurApiUsbAutoConnect(ctx, api);
             case "TCP":
-                return new NurApiSocketAutoConnect(ctx, api);
             case "INT":
                 return new NurApiSocketAutoConnect(ctx, api);
             case "SMARTPAIR":
