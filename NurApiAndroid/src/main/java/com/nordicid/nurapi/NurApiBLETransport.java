@@ -35,7 +35,7 @@ public class NurApiBLETransport implements NurApiTransport
 	private UartService mService = null;
 	private String mAddr;
 	RingBuffer mRxBuf = new RingBuffer(1024 * 64);
-	Object readLock = new Object();
+	final Object readLock = new Object();
 
 	/**
 	 * The transport constructor.
@@ -74,8 +74,7 @@ public class NurApiBLETransport implements NurApiTransport
 	 * {@inheritDoc} 
 	 */
 	@Override
-	public int readData(byte []buffer) throws IOException
-	{
+	public int readData(byte []buffer) {
 		if (!isConnected()) {
 			Log.i(TAG, "read disconnected!");
 			return -1;
@@ -113,8 +112,7 @@ public class NurApiBLETransport implements NurApiTransport
 	 * {@inheritDoc} 
 	 */	
 	@Override
-	public int writeData(byte []buffer, int len) throws IOException
-	{
+	public int writeData(byte []buffer, int len) {
 		if (!isConnected()) {
 			Log.i(TAG, "write disconnected!");
 			return -1;

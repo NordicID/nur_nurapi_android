@@ -27,13 +27,11 @@ import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
@@ -59,7 +57,7 @@ public class NurDeviceListActivity extends Activity implements NurDeviceScanner.
     public static final int RESULT_CANCELED = 0;
     public static final int RESULT_OK = 1;
 
-    public static final int REQ_BLE_DEVICES = (1 << 0);
+    public static final int REQ_BLE_DEVICES = (1);
     public static final int REQ_USB_DEVICES = (1 << 1);
     public static final int REQ_ETH_DEVICES = (1 << 2);
     public static final int LAST_DEVICE = REQ_ETH_DEVICES;
@@ -67,12 +65,10 @@ public class NurDeviceListActivity extends Activity implements NurDeviceScanner.
     public static final String STR_SCANTIMEOUT = "SCAN_TIMEOUT";
     public static final String STR_CHECK_NID = "NID_FILTER_CHECK";
     public static final String SPECSTR = "SPECSTR";
-    private int mRequestedDevices = 0;
     private boolean mCheckNordicID = false;
     List<NurDeviceSpec> mDeviceList;
     private DeviceAdapter deviceAdapter;
     private static final long DEF_SCAN_PERIOD = 5000;
-    // Default
     private long mScanPeriod = DEF_SCAN_PERIOD;
     private boolean mScanning = false;
     private ProgressBar mScanProgress;
@@ -109,34 +105,29 @@ public class NurDeviceListActivity extends Activity implements NurDeviceScanner.
         layoutParams.gravity = Gravity.TOP;
         layoutParams.y = 200;
 
-        mCancelButton = (Button) findViewById(R.id.btn_cancel);
-        mScanProgress = (ProgressBar) findViewById(R.id.scan_progress);
+        mCancelButton = findViewById(R.id.btn_cancel);
+        mScanProgress = findViewById(R.id.scan_progress);
         mScanProgress.setVisibility(View.VISIBLE);
         mScanProgress.setScaleY(0.5f);
         mScanProgress.setScaleX(0.5f);
 
-        mRequestedDevices = getIntent().getIntExtra(REQUESTED_DEVICE_TYPES, ALL_DEVICES);
         mScanPeriod = getIntent().getLongExtra(STR_SCANTIMEOUT, DEF_SCAN_PERIOD);
         mCheckNordicID = getIntent().getBooleanExtra(STR_CHECK_NID, true);
+        int mRequestedDevices = getIntent().getIntExtra(REQUESTED_DEVICE_TYPES, ALL_DEVICES);
 
-        /** Device scanner **/
-        mDeviceScanner = new NurDeviceScanner(this,mRequestedDevices,this, mApi);
-        /** **/
+        mDeviceScanner = new NurDeviceScanner(this, mRequestedDevices,this, mApi);
 
         if ((mRequestedDevices & REQ_BLE_DEVICES) != 0) {
-            mCancelButton.setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (!mScanning) {
-                        mDeviceScanner.scanDevices();
-                    }
-                    else {
-                        mDeviceScanner.stopScan();
-                        if (!mDeviceScanner.isEthQueryRunning())
-                            finish();
-                        else
-                            showMessage("Ethernet query not ready...");
-                    }
+            mCancelButton.setOnClickListener(v -> {
+                if (!mScanning) {
+                    mDeviceScanner.scanDevices();
+                }
+                else {
+                    mDeviceScanner.stopScan();
+                    if (!mDeviceScanner.isEthQueryRunning())
+                        finish();
+                    else
+                        showMessage();
                 }
             });
         } else
@@ -148,9 +139,9 @@ public class NurDeviceListActivity extends Activity implements NurDeviceScanner.
         /* Initialize device list container */
         Log.d(TAG, "populateList");
         ListView newDevicesListView;
-        mDeviceList = new ArrayList<NurDeviceSpec>();
+        mDeviceList = new ArrayList<>();
         deviceAdapter = new DeviceAdapter(this, mDeviceList);
-        newDevicesListView = (ListView) findViewById(R.id.new_devices);
+        newDevicesListView = findViewById(R.id.new_devices);
         newDevicesListView.setAdapter(deviceAdapter);
         newDevicesListView.setOnItemClickListener(mDeviceClickListener);
         mDeviceScanner.scanDevices();
@@ -176,7 +167,7 @@ public class NurDeviceListActivity extends Activity implements NurDeviceScanner.
         mDeviceScanner.stopScan();
     }
 
-    private OnItemClickListener mDeviceClickListener = new OnItemClickListener() {
+    private final OnItemClickListener mDeviceClickListener = new OnItemClickListener() {
     	
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -198,7 +189,7 @@ public class NurDeviceListActivity extends Activity implements NurDeviceScanner.
         mDeviceScanner.stopScan();
     }
     
-    class DeviceAdapter extends BaseAdapter {
+    static class DeviceAdapter extends BaseAdapter {
         Context context;
         List<NurDeviceSpec> devices;
         LayoutInflater inflater;
@@ -231,21 +222,21 @@ public class NurDeviceListActivity extends Activity implements NurDeviceScanner.
             if (convertView != null) {
                 vg = (ViewGroup) convertView;
             } else {
-                vg = (ViewGroup) inflater.inflate(R.layout.device_element, null);
+                vg = (ViewGroup) inflater.inflate(R.layout.device_element, parent, false);
             }
 
             NurDeviceSpec  deviceSpec = devices.get(position);
-            final TextView tvadd = ((TextView) vg.findViewById(R.id.address));
-            final TextView tvname = ((TextView) vg.findViewById(R.id.name));
-            final TextView tvpaired = (TextView) vg.findViewById(R.id.paired);
-            final TextView tvrssi = (TextView) vg.findViewById(R.id.rssi);
+            final TextView tvadd = vg.findViewById(R.id.address);
+            final TextView tvname = vg.findViewById(R.id.name);
+            final TextView tvpaired = vg.findViewById(R.id.paired);
+            final TextView tvrssi = vg.findViewById(R.id.rssi);
 
             if (deviceSpec.getType().equals("BLE")) {
                 int rssiVal = deviceSpec.getRSSI();
                 if (rssiVal < 0)    // Might be also != 0...
-                    tvrssi.setText("RSSI: " + rssiVal);
+                    tvrssi.setText(context.getString(R.string.rssi, String.valueOf(rssiVal)));
                 else
-                    tvrssi.setText("RSSI: N/A");
+                    tvrssi.setText(context.getString(R.string.rssi, "N/A"));
 
                 tvrssi.setVisibility(View.VISIBLE);
 
@@ -263,7 +254,8 @@ public class NurDeviceListActivity extends Activity implements NurDeviceScanner.
             tvname.setText(deviceSpec.getName());
 
             if (deviceSpec.getType().equals("TCP")) {
-                tvadd.setText(deviceSpec.getAddress() + " ("+deviceSpec.getPart("transport", "LAN")+")");
+                String text = (deviceSpec.getAddress() + " ("+deviceSpec.getPart("transport", "LAN")+")");
+                tvadd.setText(text);
             } else {
                 tvadd.setText(deviceSpec.getAddress());
             }
@@ -272,8 +264,8 @@ public class NurDeviceListActivity extends Activity implements NurDeviceScanner.
         }
     }
 
-    private void showMessage(String msg) {
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+    private void showMessage() {
+        Toast.makeText(this, "Ethernet query not ready...", Toast.LENGTH_SHORT).show();
     }
 
     public static void startDeviceRequest(Activity activity, NurApi api) throws InvalidParameterException

@@ -23,9 +23,9 @@ import android.util.Log;
 public class NurAccessoryVersionInfo {
     static String TAG = "NurAccessoryVersionInfo";
 
-    private String mBootloaderVersion;
-    private String mFullApplicationVersion;
-    private String mApplicationVersion;
+    private final String mBootloaderVersion;
+    private final String mFullApplicationVersion;
+    private final String mApplicationVersion;
 
     /** Decode accessory device version info.
      * @param version Version string from device.

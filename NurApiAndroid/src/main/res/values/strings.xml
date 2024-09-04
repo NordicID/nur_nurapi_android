@@ -10,5 +10,6 @@
     <string name="ble_not_supported">Bluetooth Low Energy not supported</string>
     <string name="text_bt_not_on">Bluetooth needs to be enabled for finding bluetooth devices</string>
     <string name="text_location_not_on">Location needs to be enabled for finding bluetooth devices</string>
+    <string name="rssi">RSSI: %1$s</string>
 
 </resources>

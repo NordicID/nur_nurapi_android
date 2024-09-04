@@ -4,7 +4,6 @@ import no.nordicsemi.android.support.v18.scanner.BluetoothLeScannerCompat;
 import no.nordicsemi.android.support.v18.scanner.ScanCallback;
 import no.nordicsemi.android.support.v18.scanner.ScanResult;
 import no.nordicsemi.android.support.v18.scanner.ScanSettings;
-import no.nordicsemi.android.support.v18.scanner.ScanFilter;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -12,11 +11,9 @@ import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.location.LocationManager;
 import android.os.Build;
 import android.os.Handler;
 import android.provider.Settings;
-import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -24,9 +21,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.RunnableFuture;
-
-import static android.content.Context.LOCATION_SERVICE;
 
 /**
  * Created by Mikko on 13.6.2017.
@@ -45,16 +39,14 @@ public class BleScanner {
 
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothLeScannerCompat mScanner;
-    private Handler mHandler;
+    private final Handler mHandler;
 
     private boolean mScanning = false;
 
-    private Context mOwner = null;
+    private Context mOwner;
 
-    private List<BleScannerListener> mListeners = new ArrayList<BleScannerListener>();
-    private List<BleScannerListenerEx> mListenersEx = new ArrayList<BleScannerListenerEx>();
-
-    private int mScanPeriod = 20000;
+    private final List<BleScannerListener> mListeners = new ArrayList<>();
+    private final List<BleScannerListenerEx> mListenersEx = new ArrayList<>();
 
     private int listenerCount() {
         return (mListeners.size() + mListenersEx.size());
@@ -90,8 +82,7 @@ public class BleScanner {
     }
 
     public void unregisterListener(BleScannerListener listener) {
-        if (mListeners.contains(listener))
-            mListeners.remove(listener);
+        mListeners.remove(listener);
     }
 
     public void registerScanListenerEx(BleScannerListenerEx listener){
@@ -102,8 +93,7 @@ public class BleScanner {
     }
 
     public void unregisterListenerEx(BleScannerListenerEx listener) {
-        if (mListenersEx.contains(listener))
-            mListenersEx.remove(listener);
+        mListenersEx.remove(listener);
     }
 
     boolean isLocationServicesEnabled() {
@@ -135,12 +125,8 @@ public class BleScanner {
         mScanning = true;
 
         // Stops scanning after a pre-defined scan period.
-        mHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                onScanFinished();
-            }
-        }, mScanPeriod);
+        int mScanPeriod = 20000;
+        mHandler.postDelayed(this::onScanFinished, mScanPeriod);
 
         ScanSettings settings = new ScanSettings.Builder()
                     .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
@@ -152,21 +138,18 @@ public class BleScanner {
     static public Set<BluetoothDevice> getPairedDevices() {
         BluetoothManager bluetoothManager = (BluetoothManager)getInstance().mOwner.getSystemService(Context.BLUETOOTH_SERVICE);
         if (bluetoothManager == null) {
-            return new HashSet<BluetoothDevice>();
+            return new HashSet<>();
         }
         BluetoothAdapter adapter = bluetoothManager.getAdapter();
         if (adapter == null) {
-            return new HashSet<BluetoothDevice>();
+            return new HashSet<>();
         }
         return adapter.getBondedDevices();
     }
 
     static public boolean isBleDevice(BluetoothDevice device) {
-        if (device.getType() != BluetoothDevice.DEVICE_TYPE_LE && device.getType() != BluetoothDevice.DEVICE_TYPE_UNKNOWN) {
-            // Log.w(TAG, "NOT BLE device; " + device.getAddress() + "; " + device.getType());
-            return false;
-        }
-        return true;
+        // Log.w(TAG, "NOT BLE device; " + device.getAddress() + "; " + device.getType());
+        return device.getType() == BluetoothDevice.DEVICE_TYPE_LE || device.getType() == BluetoothDevice.DEVICE_TYPE_UNKNOWN;
     }
 
     private void onDeviceFound(final ScanResult result) {
@@ -188,12 +171,12 @@ public class BleScanner {
 
         // Log.i(TAG, "onDeviceFound() " + device.getAddress() + "; name " + name + "; rssi " + rssi);
 
-        List<BleScannerListener> listeners = new ArrayList<BleScannerListener>(mListeners);
+        List<BleScannerListener> listeners = new ArrayList<>(mListeners);
         for (BleScannerListener l : listeners) {
             l.onBleDeviceFound(device, name, rssi);
         }
 
-        List<BleScannerListenerEx> listenersEx = new ArrayList<BleScannerListenerEx>(mListenersEx);
+        List<BleScannerListenerEx> listenersEx = new ArrayList<>(mListenersEx);
         for (BleScannerListenerEx lex : listenersEx) {
             lex.onBleDeviceFound(result);
         }
@@ -214,23 +197,13 @@ public class BleScanner {
 
         if (listenerCount() > 0) {
             Log.i(TAG, "onScanFinished() restart scan");
-            mHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    onScanStarted();
-                }
-            }, 500);
+            mHandler.postDelayed(this::onScanStarted, 500);
         }
     }
 
     private void showToast(final int strRes)
     {
-        new Handler(mOwner.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(mOwner, strRes, Toast.LENGTH_SHORT).show();
-            }
-        });
+        new Handler(mOwner.getMainLooper()).post(() -> Toast.makeText(mOwner, strRes, Toast.LENGTH_SHORT).show());
     }
 
     private void scanDevices() {
@@ -290,7 +263,7 @@ public class BleScanner {
         onScanStarted();
     }
 
-    private ScanCallback mScanCallback = new ScanCallback() {
+    private final ScanCallback mScanCallback = new ScanCallback() {
         @Override
         public void onScanResult(final int callbackType, final ScanResult result) {
             if (!mScanning) {
@@ -310,7 +283,6 @@ public class BleScanner {
 
             for (final ScanResult result : results)
             {
-                final BluetoothDevice device = result.getDevice();
                 onDeviceFound(result);
                 if (!mScanning) {
                     break;

@@ -16,28 +16,20 @@
 */
 package com.nordicid.nurapi;
 
-import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.hardware.usb.UsbDevice;
-import android.hardware.usb.UsbManager;
-//import android.util.Log;
-import android.os.Handler;
 import android.util.Log;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Locale;
+import java.util.Objects;
 
 public class NurApiSocketAutoConnect implements NurApiAutoConnectTransport
 {
 	static final String TAG = "NurApiSocketAutoConnect";
 
-	private NurApi mApi = null;
-	private Context mContext = null;
-	private String mAddress = ""; // Spec addr: ip:port
+	private final NurApi mApi;
+    private String mAddress = ""; // Spec addr: ip:port
 	private String mHost = "";
 	private int mPort = 0;
 	private boolean mInvalidAddress = false;
@@ -47,10 +39,9 @@ public class NurApiSocketAutoConnect implements NurApiAutoConnectTransport
 	public static final int STATE_CONNECTED = 2;
 	int mState = STATE_DISCONNECTED;
 
-	public NurApiSocketAutoConnect(Context c, NurApi na)
+	public NurApiSocketAutoConnect(@SuppressWarnings("unused") Context c, NurApi na)
 	{
-		this.mContext = c;
-		this.mApi = na;
+        this.mApi = na;
 	}
 
 	private void disconnect() 
@@ -74,7 +65,7 @@ public class NurApiSocketAutoConnect implements NurApiAutoConnectTransport
 				mTr.disconnect();
 				mTr = null;
 			}
-		} catch (Exception ex) { }
+		} catch (Exception ignored) { }
 
 		if (joinAutoConnThread) {
 			try {
@@ -87,7 +78,7 @@ public class NurApiSocketAutoConnect implements NurApiAutoConnectTransport
 
 		try {
 			mApi.setTransport(null);
-		} catch (Exception ex) { }
+		} catch (Exception ignored) { }
 
 		mState = STATE_DISCONNECTED;
 	}
@@ -110,7 +101,7 @@ public class NurApiSocketAutoConnect implements NurApiAutoConnectTransport
 	@Override
 	public void setAddress(String addr)
 	{
-		if (addr == mAddress) {
+		if (Objects.equals(addr, mAddress)) {
 			Log.d(TAG, "setAddress address is same! " + addr);
 			Log.d(TAG, "setAddress host=" + mHost);
 			Log.d(TAG, "setAddress port=" + mPort);

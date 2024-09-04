@@ -1,14 +1,10 @@
 package com.nordicid.nurapi;
 
-import com.nordicid.nurapi.NurApiException;
-import com.nordicid.nurapi.NurApiTransport;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.net.SocketAddress;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
@@ -113,7 +109,7 @@ public class NurApiSocketTransport implements NurApiTransport
         		//mInput = null;
         	}
         }
-    	catch(Exception e) {}
+    	catch(Exception ignored) {}
         
         try{            
             if(mOutput != null) 
@@ -122,7 +118,7 @@ public class NurApiSocketTransport implements NurApiTransport
             	//mOutput = null;
             }
         }
-    	catch(Exception e) {}
+    	catch(Exception ignored) {}
 
 		try{
 			if(mSocket != null)
@@ -131,7 +127,7 @@ public class NurApiSocketTransport implements NurApiTransport
 				//mSocket = null;
 			}
 		}
-		catch(Exception e) {}
+		catch(Exception ignored) {}
 
 		mConnected = false;
 	}
@@ -174,8 +170,7 @@ public class NurApiSocketTransport implements NurApiTransport
 	}
 
 	@Override
-	public int writeData(byte[] buffer, int len) throws IOException
-	{
+	public int writeData(byte[] buffer, int len) {
 		if (mOutput == null)
 			return -1;
 
