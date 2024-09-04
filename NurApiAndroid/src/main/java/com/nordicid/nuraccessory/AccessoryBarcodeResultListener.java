@@ -29,5 +29,5 @@ public interface AccessoryBarcodeResultListener {
      *
      * @see AccessoryBarcodeResult
      */
-    public void onBarcodeResult(AccessoryBarcodeResult result);
+    void onBarcodeResult(AccessoryBarcodeResult result);
 }

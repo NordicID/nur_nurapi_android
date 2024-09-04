@@ -44,13 +44,13 @@ public class NurAccessoryConfig
 	public static final int MAX_NAME_LENGTH = (SZ_NAME_FIELD - 1);
 
 	/** HID-bit for the barcode scan. */
-	public static final int APP_FL_HID_BARCODE = (1<<0);
+	public static final int APP_FL_HID_BARCODE = (1);
 	/** HID-bit for the RFID scan / inventory. */
 	public static final int APP_FL_HID_RFID = (1<<1);
 	/** Allow pairing bit */
 	public static final int APP_FL_USE_PEERMGR = (1<<5);
 	/** Device is configured as EXA51 reader. */
-	public static final int CONFIG_FLAG_EXA51 = (1<<0);
+	public static final int CONFIG_FLAG_EXA51 = (1);
 	/** Device is configured as EXA31 reader. */
 	public static final int CONFIG_FLAG_EXA31 = (1<<1);
 
@@ -87,11 +87,11 @@ public class NurAccessoryConfig
 	}
 
 	// Check whether the given signature is correct as extracted from the byte data.
-	private static void checkSignatureThrow(byte []source, String message) throws NurApiException
+	private static void checkSignatureThrow(byte []source) throws NurApiException
 	{
 		if(source == null || source.length < 4)
-			throw new NurApiException(message + "; source invalid", NurApiErrors.INVALID_PACKET);
-		checkSignatureThrow(NurPacket.BytesToDword(source, 0), message);
+			throw new NurApiException("Accessory extension, getConfig: unknown configuration signature" + "; source invalid", NurApiErrors.INVALID_PACKET);
+		checkSignatureThrow(NurPacket.BytesToDword(source, 0), "Accessory extension, getConfig: unknown configuration signature");
 	}
 
 	/**
@@ -167,7 +167,7 @@ public class NurAccessoryConfig
 		int sourceOffset = 0;	// 0 = no sub-command echo in reply.
 
 		// The reply starts with signature.
-		checkSignatureThrow(reply, "Accessory extension, getConfig: unknown configuration signature");
+		checkSignatureThrow(reply);
 
 		if (reply.length < APP_CTX_SIZE)
 			throw new NurApiException("Accessory config, invalid reply length", NurApiErrors.INVALID_PACKET);
@@ -245,7 +245,7 @@ public class NurAccessoryConfig
 		if (cfg.signature != APP_PERM_SIG_OLD1) {
 			nameBytes = new byte[MAX_NAME_LENGTH+1];
 			for (int n=0; n<MAX_NAME_LENGTH+1; n++) nameBytes[n] = 0;
-			int copyLength = (cfg.name.length() > MAX_NAME_LENGTH) ? MAX_NAME_LENGTH : cfg.name.length();
+			int copyLength = Math.min(cfg.name.length(), MAX_NAME_LENGTH);
 			System.arraycopy(cfg.name.getBytes(), 0, nameBytes, 0, copyLength);
 			offset += NurPacket.PacketBytes(serializedCfg, offset, nameBytes);
 			offset += NurPacket.PacketWord(serializedCfg, offset, cfg.hidBarcodeTimeout);
@@ -315,7 +315,7 @@ public class NurAccessoryConfig
 	 */
 	public boolean isDeviceEXA21()
 	{			
-		return hasImagerScanner() ? false:true; //not good way but only one..				
+		return !hasImagerScanner(); //not good way but only one..
 	}
 	
 	/**
@@ -365,5 +365,5 @@ public class NurAccessoryConfig
 	{
 		return ((configValue & DEV_FEATURE_VIBRATOR) != 0);
 	}
-};
+}
 

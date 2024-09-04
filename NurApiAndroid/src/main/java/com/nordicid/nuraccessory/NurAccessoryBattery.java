@@ -23,7 +23,7 @@ import com.nordicid.nurapi.NurPacket;
 /**
  * Accessory extension's battery information.
  * @author Nordic ID
- *
+ * <p>
  * Class containing extended battery information.
  * All fields may not yet be present.
  */
@@ -49,7 +49,7 @@ public class NurAccessoryBattery {
 	public boolean charging = false;
 
 	// Flags.
-	private static final int FLAG_CHARGING = (1 << 0);
+	private static final int FLAG_CHARGING = (1);
 
 	/**
 	 * Deserialize a battery reply from the device.

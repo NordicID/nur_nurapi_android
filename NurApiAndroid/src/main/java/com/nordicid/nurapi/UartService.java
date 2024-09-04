@@ -50,7 +50,7 @@ public class UartService extends Service implements BleScanner.BleScannerListene
     public static final UUID RX_CHAR_UUID = UUID.fromString("6e400002-b5a3-f393-e0a9-e50e24dcca9e");
     public static final UUID TX_CHAR_UUID = UUID.fromString("6e400003-b5a3-f393-e0a9-e50e24dcca9e");
 
-    RingBuffer mTxBuf = new RingBuffer();
+    final RingBuffer mTxBuf = new RingBuffer();
     boolean mTxActive = false;
 
     BluetoothGattService mRxService = null;
@@ -113,7 +113,7 @@ public class UartService extends Service implements BleScanner.BleScannerListene
 
     // Implements callback methods for GATT events that the app cares about.  For example,
     // connection change and services discovered.
-    private BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
+    private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState)
         {
@@ -135,13 +135,10 @@ public class UartService extends Service implements BleScanner.BleScannerListene
                 // Attempts to discover services after successful connection.
 
                 Log.i(TAG, "Attempting to start service discovery");
-                mHandler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-	                    Log.w(TAG, "start discoverServices");
-                        if(mBluetoothGatt != null)
-	                        mBluetoothGatt.discoverServices();
-                    }
+                mHandler.postDelayed(() -> {
+                    Log.w(TAG, "start discoverServices");
+                    if(mBluetoothGatt != null)
+                        mBluetoothGatt.discoverServices();
                 }, 100);
                 
                 mHandler.postDelayed(mDiscoverServicesJamCheck, 5000);
@@ -157,7 +154,7 @@ public class UartService extends Service implements BleScanner.BleScannerListene
             }
         }
         
-        Runnable mDiscoverServicesJamCheck = new Runnable() {
+        final Runnable mDiscoverServicesJamCheck = new Runnable() {
         	@Override
             public void run() {
                 Log.w(TAG, "discoverServices jammed, restart");
@@ -403,33 +400,30 @@ public class UartService extends Service implements BleScanner.BleScannerListene
         setConnState(STATE_CONNECTING);
 
         // Samsung BT stack..
-        mHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
+        mHandler.postDelayed(() -> {
 
-                if (mConnectionState != STATE_CONNECTING)
-                    return;
+            if (mConnectionState != STATE_CONNECTING)
+                return;
 
-                Log.w(TAG, "connect " + address);
+            Log.w(TAG, "connect " + address);
 
-                if (mBluetoothGatt != null) {
-                    try {
-                        mBluetoothGatt.disconnect();
-                        mBluetoothGatt.close();
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                    }
-                    mBluetoothGatt = null;
+            if (mBluetoothGatt != null) {
+                try {
+                    mBluetoothGatt.disconnect();
+                    mBluetoothGatt.close();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
                 }
-
-                // We want to directly connect to the device, so we are setting the autoConnect
-                // parameter to false.
-                //mBluetoothGatt = device.connectGatt(this, false, mGattCallback);
-                Log.i(TAG, "Trying to create a new connection");
-                mBluetoothGatt = device.connectGatt(UartService.this, false, mGattCallback);
-                //mBluetoothGatt.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_HIGH);
-                Log.i(TAG, "Connection created");
+                mBluetoothGatt = null;
             }
+
+            // We want to directly connect to the device, so we are setting the autoConnect
+            // parameter to false.
+            //mBluetoothGatt = device.connectGatt(this, false, mGattCallback);
+            Log.i(TAG, "Trying to create a new connection");
+            mBluetoothGatt = device.connectGatt(UartService.this, false, mGattCallback);
+            //mBluetoothGatt.requestConnectionPriority(BluetoothGatt.CONNECTION_PRIORITY_HIGH);
+            Log.i(TAG, "Connection created");
         }, 100);
 
         return true;
@@ -533,7 +527,7 @@ public class UartService extends Service implements BleScanner.BleScannerListene
     /**
      * Enable TXNotification
      *
-     * @return
+     * @return true if successfully enabled
      */
     public boolean enableTXNotification()
     {
@@ -541,8 +535,7 @@ public class UartService extends Service implements BleScanner.BleScannerListene
 
         BluetoothGattDescriptor descriptor = mTxChar.getDescriptor(CCCD);
         descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-        boolean ret = mBluetoothGatt.writeDescriptor(descriptor);
-        return ret;
+        return mBluetoothGatt.writeDescriptor(descriptor);
     }
 
     private boolean writeRXCharacteristic2(byte[] value)
@@ -559,7 +552,7 @@ public class UartService extends Service implements BleScanner.BleScannerListene
         boolean status = false;
         try {
             status = mBluetoothGatt.writeCharacteristic(mRxChar);
-        } catch (Exception e) { }
+        } catch (Exception ignored) { }
 
         if (!status)
             mTxActive = false;

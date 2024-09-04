@@ -4,7 +4,7 @@ package com.nordicid.nurapi;
  * Interface representing the UART service's events.
  */
 public interface UartServiceEvents {
-	public void onConnStateChanged();
-	public void onDataAvailable(byte []data);
-	public void onReadRemoteRssi(int rssi);
+	void onConnStateChanged();
+	void onDataAvailable(byte []data);
+	void onReadRemoteRssi(int rssi);
 }

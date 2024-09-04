@@ -1,7 +1,6 @@
 package com.nordicid.nurapi;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 
 import org.json.JSONObject;
 
@@ -35,7 +34,7 @@ public class NurSmartPairSupport {
     {
         try
         {
-            Constructor c = Class.forName ("com.nordicid.smartpair.NurApiSmartPairAutoConnect").getConstructor(Context.class, NurApi.class);
+            Constructor<?> c = Class.forName ("com.nordicid.smartpair.NurApiSmartPairAutoConnect").getConstructor(Context.class, NurApi.class);
             return (NurApiAutoConnectTransport)c.newInstance(ctx, api);
         }
         catch (Exception e)
@@ -44,7 +43,7 @@ public class NurSmartPairSupport {
         }
     }
 
-    static public final String getVersion()
+    static public String getVersion()
     {
         try
         {
