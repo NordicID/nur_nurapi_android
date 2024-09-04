@@ -40,6 +40,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -67,6 +68,7 @@ public class NurDeviceListActivity extends Activity implements NurDeviceScanner.
     public static final int ALL_DEVICES = (LAST_DEVICE << 1) - 1;
     public static final String STR_SCANTIMEOUT = "SCAN_TIMEOUT";
     public static final String STR_CHECK_NID = "NID_FILTER_CHECK";
+    public static final String COLOR = "COLOR";
     public static final String SPECSTR = "SPECSTR";
     private int mRequestedDevices = 0;
     private boolean mCheckNordicID = false;
@@ -110,6 +112,10 @@ public class NurDeviceListActivity extends Activity implements NurDeviceScanner.
         android.view.WindowManager.LayoutParams layoutParams = this.getWindow().getAttributes();
         layoutParams.gravity = Gravity.TOP;
         layoutParams.y = 200;
+
+        LinearLayout mDeviceListLayout = findViewById(R.id.device_list);
+        int color = getIntent().getIntExtra(COLOR, Color.BLACK);
+        mDeviceListLayout.setBackgroundColor(color);
 
         mCancelButton = (Button) findViewById(R.id.btn_cancel);
         mScanProgress = (ProgressBar) findViewById(R.id.scan_progress);
@@ -280,15 +286,20 @@ public class NurDeviceListActivity extends Activity implements NurDeviceScanner.
 
     public static void startDeviceRequest(Activity activity, NurApi api) throws InvalidParameterException
     {
-        startDeviceRequest(activity, ALL_DEVICES, 0, false,api);
+        startDeviceRequest(activity, ALL_DEVICES, 0, false, Color.BLACK, api);
     }
 
     public static void startDeviceRequest(Activity activity, int devMask, NurApi api) throws InvalidParameterException
     {
-        startDeviceRequest(activity, devMask, 0, false,api);
+        startDeviceRequest(activity, devMask, 0, false, Color.BLACK, api);
     }
 
-    public static void startDeviceRequest(Activity activity, int devMask, long scanTimeout, boolean filterNID, NurApi api) throws InvalidParameterException
+    public static void startDeviceRequest(Activity activity, NurApi api, int color) throws InvalidParameterException
+    {
+        startDeviceRequest(activity, ALL_DEVICES, 0, false, color, api);
+    }
+
+    public static void startDeviceRequest(Activity activity, int devMask, long scanTimeout, boolean filterNID, int color, NurApi api) throws InvalidParameterException
     {
         if (devMask == 0 || (devMask & ALL_DEVICES) == 0)
             throw new InvalidParameterException("startDeviceRequest(): no devices specified or context is invalid");
@@ -297,6 +308,7 @@ public class NurDeviceListActivity extends Activity implements NurDeviceScanner.
         newIntent.putExtra(REQUESTED_DEVICE_TYPES, devMask & ALL_DEVICES);
         newIntent.putExtra(STR_SCANTIMEOUT, scanTimeout);
         newIntent.putExtra(STR_CHECK_NID, filterNID);
+        newIntent.putExtra(COLOR, color);
         activity.startActivityForResult(newIntent, NurDeviceListActivity.REQUEST_SELECT_DEVICE);
     }
 }
