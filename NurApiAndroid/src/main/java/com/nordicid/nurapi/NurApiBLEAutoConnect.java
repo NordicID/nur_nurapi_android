@@ -184,10 +184,16 @@ public class NurApiBLEAutoConnect implements UartServiceEvents, NurApiAutoConnec
 						e.printStackTrace();
 
 						if (!mApi.isConnected()) {
+							/*
+							 * If the NUR API has not been able to connect or has timed out multiple times,
+							 * the service is still bound yet API is agnostic of this which will keep the
+							 * service alive and bluetooth connection alive and no way to recover from
+							 * API side. In this case, just kill the UART service and start it again.
+							 */
 							if (mServiceBound) {
-								Log.w(TAG, "reconnect on failure");
-								//mService.close();
-								mService.connect(mAddr);
+								Log.e(TAG, "connect error, restart UartService");
+								onStopInternal();
+								onResumeInternal();
 							}
 						}
 					}
