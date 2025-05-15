@@ -1,3 +1,6 @@
+v2.2.5
+ - Fixed transport layer reconnect failure
+
 v2.2.3
  - Added support for layout color
  - Cut dialog title bar
