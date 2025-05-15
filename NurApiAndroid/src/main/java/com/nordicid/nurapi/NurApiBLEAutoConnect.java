@@ -1,18 +1,18 @@
-/* 
-  Copyright 2016- Nordic ID 
+/*
+  Copyright 2016- Nordic ID
   NORDIC ID DEMO SOFTWARE DISCLAIMER
 
-  You are about to use Nordic ID Demo Software ("Software"). 
-  It is explicitly stated that Nordic ID does not give any kind of warranties, 
-  expressed or implied, for this Software. Software is provided "as is" and with 
-  all faults. Under no circumstances is Nordic ID liable for any direct, special, 
-  incidental or indirect damages or for any economic consequential damages to you 
+  You are about to use Nordic ID Demo Software ("Software").
+  It is explicitly stated that Nordic ID does not give any kind of warranties,
+  expressed or implied, for this Software. Software is provided "as is" and with
+  all faults. Under no circumstances is Nordic ID liable for any direct, special,
+  incidental or indirect damages or for any economic consequential damages to you
   or to any third party.
 
-  The use of this software indicates your complete and unconditional understanding 
-  of the terms of this disclaimer. 
-  
-  IF YOU DO NOT AGREE OF THE TERMS OF THIS DISCLAIMER, DO NOT USE THE SOFTWARE.  
+  The use of this software indicates your complete and unconditional understanding
+  of the terms of this disclaimer.
+
+  IF YOU DO NOT AGREE OF THE TERMS OF THIS DISCLAIMER, DO NOT USE THE SOFTWARE.
 */
 
 package com.nordicid.nurapi;
@@ -40,12 +40,12 @@ public class NurApiBLEAutoConnect implements UartServiceEvents, NurApiAutoConnec
 
 	// Context given to this autoconnect instance.
 	private final Context mContext;
-	
+
 	// The UART service required for this instance.
 	private UartService mService = null;
 	// Reader / accessory address.
 	private String mAddr = "";
-	
+
 	boolean mServiceBound = false;
 
 	private int mLastRemoteRssi = 0;
@@ -59,41 +59,41 @@ public class NurApiBLEAutoConnect implements UartServiceEvents, NurApiAutoConnec
 	int mState = STATE_DISCONNECTED;
 
 	// UART service connected/disconnected
-    private final ServiceConnection mServiceConnection = new ServiceConnection()
-    {
+	private final ServiceConnection mServiceConnection = new ServiceConnection()
+	{
 		@Override
-        public void onServiceConnected(ComponentName className, IBinder rawBinder) 
+		public void onServiceConnected(ComponentName className, IBinder rawBinder)
 		{
 			if (mService == null) {
-        		mService = ((UartService.LocalBinder) rawBinder).getService();
-        		Log.d(TAG, "onServiceConnected NEW service");
+				mService = ((UartService.LocalBinder) rawBinder).getService();
+				Log.d(TAG, "onServiceConnected NEW service");
 			} else {
 				Log.d(TAG, "onServiceConnected EXISTING service");
 			}
-    		
-    		if (!mService.initialize()) {
-                Log.e(TAG, "Unable to initialize Bluetooth");
-            }
-    		else
-    		{
-    			mService.setEventListener(NurApiBLEAutoConnect.this, mContext);
-    			if (!NurApiBLEAutoConnect.this.mAddr.isEmpty() && mService.getConnState() != UartService.STATE_CONNECTED)
-    				mService.connect(NurApiBLEAutoConnect.this.mAddr);
-    		}
-        }
+
+			if (!mService.initialize()) {
+				Log.e(TAG, "Unable to initialize Bluetooth");
+			}
+			else
+			{
+				mService.setEventListener(NurApiBLEAutoConnect.this, mContext);
+				if (!NurApiBLEAutoConnect.this.mAddr.isEmpty() && mService.getConnState() != UartService.STATE_CONNECTED)
+					mService.connect(NurApiBLEAutoConnect.this.mAddr);
+			}
+		}
 
 		@Override
-        public void onServiceDisconnected(ComponentName classname) {
-        		mService = null;
-        }
-    };
+		public void onServiceDisconnected(ComponentName classname) {
+				mService = null;
+		}
+	};
 
 	/**
 	 * Basic constructor.
 	 *
 	 * @param ctx Context: needed here because the is a service assignment.
 	 * @param api The NUR API instance that this instance should "notify" about the connection changes.
-     */
+	 */
 	public NurApiBLEAutoConnect(Context ctx, NurApi api)
 	{
 		this.mContext = ctx;
@@ -101,14 +101,14 @@ public class NurApiBLEAutoConnect implements UartServiceEvents, NurApiAutoConnec
 	}
 
 	public int getLastRemoteRssi(){
-	    return mLastRemoteRssi;
-    }
+		return mLastRemoteRssi;
+	}
 
 	/**
 	 * Set address of the accessory / reader. This is the "connect" as well as the "disconnect" (when address is empty) method.
 	 *
 	 * @param addr Address of the accessory / reader as provided by e.g. the device search.
-     */
+	 */
 	@Override
 	public void setAddress(String addr)
 	{
@@ -122,39 +122,39 @@ public class NurApiBLEAutoConnect implements UartServiceEvents, NurApiAutoConnec
 			onResumeInternal();
 		}
 	}
-	
+
 	private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
-	    @Override
-	    public void onReceive(Context context, Intent intent) {
-	        final String action = intent.getAction();
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			final String action = intent.getAction();
 
-	        if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
-	            final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+			if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
+				final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
 
-	            switch (state) {
-	            case BluetoothAdapter.STATE_OFF:
-	            	onStopInternal();
+				switch (state) {
+				case BluetoothAdapter.STATE_OFF:
+					onStopInternal();
 					try {
-		            	if (mApi.isConnected())
-		            		mApi.disconnect();
+						if (mApi.isConnected())
+							mApi.disconnect();
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
-	                break;
-	            case BluetoothAdapter.STATE_TURNING_OFF:
-                    case BluetoothAdapter.STATE_TURNING_ON:
-                        break;
-	            case BluetoothAdapter.STATE_ON:
-	            	try {
+					break;
+				case BluetoothAdapter.STATE_TURNING_OFF:
+					case BluetoothAdapter.STATE_TURNING_ON:
+						break;
+				case BluetoothAdapter.STATE_ON:
+					try {
 						Thread.sleep(2000);
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
-	            	onResumeInternal();
-	                break;
-                }
-	        }
-	    }
+					onResumeInternal();
+					break;
+				}
+			}
+		}
 	};
 
 	final Handler mConnStateHandler = new Handler();
@@ -197,9 +197,9 @@ public class NurApiBLEAutoConnect implements UartServiceEvents, NurApiAutoConnec
 	};
 
 	@Override
-	public void onConnStateChanged() 
+	public void onConnStateChanged()
 	{
-        mLastRemoteRssi = 0;
+		mLastRemoteRssi = 0;
 
 		if (mService == null) {
 			forceDisconnect();
@@ -209,7 +209,7 @@ public class NurApiBLEAutoConnect implements UartServiceEvents, NurApiAutoConnec
 		mConnStateHandler.removeCallbacksAndMessages(null);
 
 		Log.w(TAG, "onConnStateChanged " + mService.getConnState() + "; " + mService);
-		
+
 		if (mService.getConnState() == UartService.STATE_CONNECTED)
 		{
 			mConnStateHandler.postDelayed(mConnectApiRunnable, 1000);
@@ -222,7 +222,7 @@ public class NurApiBLEAutoConnect implements UartServiceEvents, NurApiAutoConnec
 		{
 			mState = STATE_CONNECTING;
 		}
-		
+
 		Log.w(TAG, "onConnStateChanged done " + mService.getConnState());
 	}
 
@@ -242,7 +242,7 @@ public class NurApiBLEAutoConnect implements UartServiceEvents, NurApiAutoConnec
 	 * Upon data available: write received data to the RX ring buffer.
 	 *
 	 * @param data Data from the adapter.
-     */
+	 */
 	@Override
 	public void onDataAvailable(byte[] data)
 	{
@@ -250,19 +250,19 @@ public class NurApiBLEAutoConnect implements UartServiceEvents, NurApiAutoConnec
 		mTr.writeRxBuffer(data);
 	}
 
-    @Override
-    public void onReadRemoteRssi(int rssi) {
-        mLastRemoteRssi = rssi;
-    }
+	@Override
+	public void onReadRemoteRssi(int rssi) {
+		mLastRemoteRssi = rssi;
+	}
 
-    /**
+	/**
 	 * On pause: NOP.
 	 */
 	@Override
 	public void onPause() {
 		Log.d(TAG, "onPause");
 	}
-	
+
 	boolean mBtAdapterChangeEventRegistered = false;
 
 	/**
@@ -276,7 +276,7 @@ public class NurApiBLEAutoConnect implements UartServiceEvents, NurApiAutoConnec
 			mContext.stopService(new Intent(mContext, UartService.class));
 			mContext.unbindService(mServiceConnection);
 		}
-		
+
 		if (!mServiceBound)
 		{
 			Intent bindIntent = new Intent(mContext, UartService.class);
@@ -288,7 +288,7 @@ public class NurApiBLEAutoConnect implements UartServiceEvents, NurApiAutoConnec
 				mServiceBound = true;
 			}
 		}
-		
+
 		if (!mAddr.trim().isEmpty() && mService != null)
 		{
 			if (mService.getConnState() != UartService.STATE_CONNECTED)
@@ -300,7 +300,7 @@ public class NurApiBLEAutoConnect implements UartServiceEvents, NurApiAutoConnec
 	 * This method needs to be called on activity's on resume.
 	 */
 	@Override
-	public void onResume() 
+	public void onResume()
 	{
 		Log.d(TAG, "onResume");
 		if (!mBtAdapterChangeEventRegistered)
@@ -308,10 +308,10 @@ public class NurApiBLEAutoConnect implements UartServiceEvents, NurApiAutoConnec
 			mBtAdapterChangeEventRegistered = true;
 			// Register for broadcasts on BluetoothAdapter state change
 			Log.d(TAG, "**** REGISTER RECEIVER ***");
-		    IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
-		    mContext.registerReceiver(mReceiver, filter);
+			IntentFilter filter = new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED);
+			mContext.registerReceiver(mReceiver, filter);
 		}
-	    
+
 		onResumeInternal();
 	}
 
@@ -326,13 +326,13 @@ public class NurApiBLEAutoConnect implements UartServiceEvents, NurApiAutoConnec
 		{
 			Log.d(TAG, "onStopInternal() disconnect; " + mService);
 			try {
-				mApi.disconnect();				
+				mApi.disconnect();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 			mTr.setService(null);
 		}
-		
+
 		try {
 			mApi.setTransport(null);
 		} catch (Exception e) {
@@ -353,7 +353,7 @@ public class NurApiBLEAutoConnect implements UartServiceEvents, NurApiAutoConnec
 	}
 
 	@Override
-	public void onStop() 
+	public void onStop()
 	{
 		Log.d(TAG, "onStop");
 		if (mBtAdapterChangeEventRegistered)
