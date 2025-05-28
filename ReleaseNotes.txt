@@ -1,3 +1,6 @@
+v2.2.6
+ - Reverted to Java 17 due to Android firmware JDK API 34 supporting maximum of Java 17
+
 v2.2.5
  - Fixed transport layer reconnect failure
 
