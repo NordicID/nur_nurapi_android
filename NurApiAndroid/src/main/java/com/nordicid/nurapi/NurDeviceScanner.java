@@ -33,6 +33,7 @@ public class NurDeviceScanner implements BleScannerListener {
     private final int mRequestedDevices;
     private Long mScanPeriod = DEF_SCAN_PERIOD;
     private boolean mCheckNordicID;
+    private boolean mShowSmartPair = true;
     private final NurApi mApi;
     private final List<NurDeviceSpec> mDeviceList;
     private final Handler mHandler;
@@ -48,15 +49,20 @@ public class NurDeviceScanner implements BleScannerListener {
     }
 
     public NurDeviceScanner(Context context, int requestedDevices, NurApi mApi) {
-        this(context,requestedDevices,null, mApi);
+        this(context,requestedDevices,null, true, mApi);
     }
 
     public NurDeviceScanner(Context context, int requestedDevices, NurDeviceScannerListener listener, NurApi api){
+        this(context, requestedDevices, listener, true, api);
+    }
+
+    public NurDeviceScanner(Context context, int requestedDevices, NurDeviceScannerListener listener, boolean showSmartPair, NurApi api){
         mDeviceList = new ArrayList<>();
         mOwner = context;
         mRequestedDevices = requestedDevices;
         mHandler = new Handler();
         mListener = listener;
+        mShowSmartPair = showSmartPair;
         mApi = api;
     }
 
@@ -361,7 +367,7 @@ public class NurDeviceScanner implements BleScannerListener {
 
     public void queryBLEDevices()
     {
-        if (NurSmartPairSupport.isSupported()) {
+        if (mShowSmartPair && NurSmartPairSupport.isSupported()) {
             // Add smart pair
             addDevice(getSmartPairBleDeviceSpec());
         }
