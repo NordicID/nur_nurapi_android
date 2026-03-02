@@ -365,7 +365,7 @@ public class NurDeviceScanner implements BleScannerListener {
         return new NurDeviceSpec("type=SmartPair;addr=smartpair;name=Nordic ID Smart Pair");
     }
 
-    public void queryBLEDevices()
+    public void queryBLEDevices() throws SecurityException
     {
         if (mShowSmartPair && NurSmartPairSupport.isSupported()) {
             // Add smart pair
