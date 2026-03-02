@@ -739,7 +739,7 @@ public class NurAccessoryExtension implements NurApiUnknownEventListener {
 		if (strVersion == null)
 			return intVersion;
 
-        strArr = splitByChar(strVersion, '.');
+		strArr = splitByChar(strVersion, '.');
 		if (strArr.length != 3)
 			return intVersion;
 
