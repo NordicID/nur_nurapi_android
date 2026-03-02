@@ -1,3 +1,8 @@
+v2.3.0
+ - Added CI build
+ - Fixed errors for native gradle build
+ - Throw security exceptions on missing permissions
+
 v2.2.7
  - Added new parameter to startDeviceRequest
 
