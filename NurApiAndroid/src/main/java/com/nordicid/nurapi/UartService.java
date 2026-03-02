@@ -115,7 +115,7 @@ public class UartService extends Service implements BleScanner.BleScannerListene
     // connection change and services discovered.
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
         @Override
-        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState)
+        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) throws SecurityException
         {
             super.onConnectionStateChange(gatt, status, newState);
 
@@ -156,7 +156,7 @@ public class UartService extends Service implements BleScanner.BleScannerListene
         
         final Runnable mDiscoverServicesJamCheck = new Runnable() {
         	@Override
-            public void run() {
+            public void run() throws SecurityException {
                 Log.w(TAG, "discoverServices jammed, restart");
                 if(mBluetoothGatt != null)
                     mBluetoothGatt.discoverServices();
@@ -345,7 +345,7 @@ public class UartService extends Service implements BleScanner.BleScannerListene
      *         {@code BluetoothGattCallback#onConnectionStateChange(android.bluetooth.BluetoothGatt, int, int)}
      *         callback.
      */
-    public boolean connect(final String address)
+    public boolean connect(final String address) throws SecurityException
     {
         mAddress = address != null ? address : "";
 
@@ -385,7 +385,7 @@ public class UartService extends Service implements BleScanner.BleScannerListene
         return true;
     }
 
-    boolean connectInternal(final String address)
+    boolean connectInternal(final String address) throws SecurityException
     {
         Log.d(TAG, "connectInternal() " + address);
 
@@ -445,7 +445,7 @@ public class UartService extends Service implements BleScanner.BleScannerListene
 
     Runnable mCheckRemoteRssi = new Runnable() {
         @Override
-        public void run() {
+        public void run() throws SecurityException {
             // Log.d(TAG, "CheckRemoteRssi; mConnectionState " + mConnectionState);
             if (mConnectionState != STATE_CONNECTED || mBluetoothGatt == null)
                 return;
@@ -462,7 +462,7 @@ public class UartService extends Service implements BleScanner.BleScannerListene
      * {@code BluetoothGattCallback#onConnectionStateChange(android.bluetooth.BluetoothGatt, int, int)}
      * callback.
      */
-    public void disconnect() {
+    public void disconnect() throws SecurityException {
         if (mBluetoothAdapter == null || mBluetoothGatt == null) {
             Log.e(TAG, "BluetoothAdapter not initialized");
             return;
@@ -481,7 +481,7 @@ public class UartService extends Service implements BleScanner.BleScannerListene
      * After using a given BLE device, the app must call this method to ensure resources are
      * released properly.
      */
-    synchronized public void close() {
+    synchronized public void close() throws SecurityException {
         Log.w(TAG, "close()");
         mClosed = true;
 
@@ -516,7 +516,7 @@ public class UartService extends Service implements BleScanner.BleScannerListene
      *
      * @param characteristic The characteristic to read from.
      */
-    public void readCharacteristic(BluetoothGattCharacteristic characteristic) {
+    public void readCharacteristic(BluetoothGattCharacteristic characteristic) throws SecurityException {
         if (mBluetoothAdapter == null || mBluetoothGatt == null) {
             Log.w(TAG, "BluetoothAdapter not initialized");
             return;
@@ -529,7 +529,7 @@ public class UartService extends Service implements BleScanner.BleScannerListene
      *
      * @return true if successfully enabled
      */
-    public boolean enableTXNotification()
+    public boolean enableTXNotification() throws SecurityException
     {
         mBluetoothGatt.setCharacteristicNotification(mTxChar, true);
 
@@ -538,7 +538,7 @@ public class UartService extends Service implements BleScanner.BleScannerListene
         return mBluetoothGatt.writeDescriptor(descriptor);
     }
 
-    private boolean writeRXCharacteristic2(byte[] value)
+    private boolean writeRXCharacteristic2(byte[] value) throws SecurityException
     {
         int len = value.length;
         if (len > 20) {

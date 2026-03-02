@@ -135,7 +135,7 @@ public class BleScanner {
         mScanner.startScan(null, settings, mScanCallback);
     }
 
-    static public Set<BluetoothDevice> getPairedDevices() {
+    static public Set<BluetoothDevice> getPairedDevices() throws SecurityException {
         BluetoothManager bluetoothManager = (BluetoothManager)getInstance().mOwner.getSystemService(Context.BLUETOOTH_SERVICE);
         if (bluetoothManager == null) {
             return new HashSet<>();
@@ -147,7 +147,7 @@ public class BleScanner {
         return adapter.getBondedDevices();
     }
 
-    static public boolean isBleDevice(BluetoothDevice device) {
+    static public boolean isBleDevice(BluetoothDevice device) throws SecurityException {
         // Log.w(TAG, "NOT BLE device; " + device.getAddress() + "; " + device.getType());
         return device.getType() == BluetoothDevice.DEVICE_TYPE_LE || device.getType() == BluetoothDevice.DEVICE_TYPE_UNKNOWN;
     }
